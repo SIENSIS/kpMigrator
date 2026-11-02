@@ -1,53 +1,51 @@
 # kpMigrator · CI4 Migration Studio
 
-Generador visual de **migracions** (mètodes `up()` i `down()`) i **seeders** per a **CodeIgniter 4.7+** (PHP 8.2+).
-És un sol fitxer `index.html` sense build ni servidor: tot es genera al navegador.
+A visual generator of **migrations** (`up()` / `down()`), **seeders** and **models** for **CodeIgniter 4.7+** (PHP 8.2+).
+Design your tables in the browser and get ready-to-use PHP files — no install, no build, nothing sent to a server.
 
-## Funcionalitats
+![Creating a table](docs/screenshots/create.png)
 
-- **Migracions de creació**: columnes, tipus, longitud, `UNSIGNED`, `NULL`, `AUTO_INCREMENT`, valor per defecte
-  (incloent-hi `CURRENT_TIMESTAMP` amb `RawSql`), comentaris, clau primària (simple o composta), únics, índexs,
-  índexs compostos, claus foranes, motor i comentari de taula.
-- **Migracions de modificació**: afegir, eliminar, modificar o renombrar columnes; afegir o eliminar índexs i
-  claus foranes; renombrar la taula; SQL personalitzat. El `down()` es genera automàticament **en ordre invers**,
-  perquè `php spark migrate:rollback` funcioni.
-- **Seeder** proposat segons l'estructura de la taula:
-  - *Faker* (`fakerphp/faker`, ja inclòs a `require-dev` de l'appstarter): detecta el generador adequat pel
-    nom i el tipus de la columna (email, nom, telèfon, slug, preu, ENUM…), respecta la longitud, els camps
-    únics i els nullable, i agafa IDs reals de les taules relacionades per a les claus foranes.
-  - *Dades fixes*: genera un array PHP amb dades aleatòries, sense cap dependència.
-  - Pots canviar el generador de cada columna o escriure-hi una expressió PHP pròpia.
-- Validació en temps real (FK `SET NULL` sobre una columna NOT NULL, `ENUM` sense valors, `VARCHAR` sense longitud…).
-- Plantilles, desat automàtic al navegador, exportar/importar JSON (també el format de l'eina antiga)
-  i **enllaç per compartir** amb tot l'esquema dins la URL.
-- Tema clar/fosc i disseny adaptat a mòbil.
+## How it works
 
-## Ús
-
-1. Obre l'aplicació (vegeu la secció següent).
-2. Tria **Crear taula** o **Modificar taula** i defineix l'estructura.
-3. Descarrega el fitxer i desa'l a `app/Database/Migrations/` (o `app/Database/Seeds/` per al seeder).
-4. Executa:
+1. **Open `index.html`** in any modern browser. It starts with an empty project.
+2. **Design your tables** in *Create table*: add columns, keys, indexes and foreign keys. You can add several tables to the same project, load a template or import existing tables with **Import SQL** (paste the output of `SHOW CREATE TABLE`).
+3. **Alter existing tables** in *Alter table*: add operations (add, drop, modify or rename columns, indexes, foreign keys…). The `down()` method is generated automatically in reverse order.
+4. **Check the result** on the right panel: Migration, Seeder, Model, DatabaseSeeder or JSON. Errors and warnings are shown below the code.
+5. **Copy or download** a single file, or **Download all (.zip)** and extract it into the root of your CodeIgniter project. Then run:
 
 ```bash
 php spark migrate
 ```
 
 ```bash
-php spark db:seed UsersSeeder
+php spark db:seed DatabaseSeeder
 ```
 
-## Publicar-la a GitHub Pages
+Your work is saved automatically in the browser. Use **Save** / **Open** to keep a project as JSON, or **Share** to copy a link that contains the whole project.
 
-1. Al repositori: **Settings → Pages**.
-2. A *Build and deployment*, tria **Deploy from a branch**, branca `main` i carpeta `/ (root)`.
-3. Al cap d'un minut estarà disponible a `https://<usuari-o-organització>.github.io/kpMigrator/`.
+## Features
 
-> Si el repositori és privat, GitHub Pages necessita un pla de pagament (Pro, Team o Enterprise).
-> Si no en tens, fes el repositori públic o obre `index.html` directament al navegador.
+| | |
+|---|---|
+| **Create migrations** | All common MySQL types, `UNSIGNED`, `NULL`, `AUTO_INCREMENT`, defaults (including `CURRENT_TIMESTAMP`), comments, primary / unique / composite indexes, foreign keys, engine and table comment. |
+| **Alter migrations** | `addColumn`, `dropColumn`, `modifyColumn` (rename), indexes, foreign keys, `renameTable` and custom SQL, each with its automatic rollback. |
+| **Multi-table projects** | Migrations are numbered so that referenced tables are created first. |
+| **Seeders** | Proposed from the table structure: Faker (random on every run) or fixed random data with no dependencies. Foreign keys use real IDs from the related table. Every column's generator can be changed. |
+| **DatabaseSeeder** | Calls every seeder in foreign-key order. |
+| **Models** | `$allowedFields`, timestamps, soft deletes, `$casts` and validation rules (`required`, `max_length`, `valid_email`, `in_list`, `is_unique`, `is_not_unique`…), editable per column. |
+| **Import SQL** | Turns `CREATE TABLE` statements into editable tables. |
+| **Validation** | Detects problems before running them, e.g. `SET NULL` on a NOT NULL column or foreign key type mismatches. |
 
-## Notes
+| Alter table | Seeder | Model |
+|---|---|---|
+| ![Alter table](docs/screenshots/alter.png) | ![Seeder](docs/screenshots/seeder.png) | ![Model](docs/screenshots/model.png) |
 
-- El codi generat està pensat per a MySQL/MariaDB (`after`, `first`, `ENGINE` i `COMMENT` només hi tenen efecte).
-- Per eliminar una clau forana creada amb `createTable()` quan uses `DBPrefix`, indica el prefix a
-  *Opcions avançades*: el nom per defecte de CI4 l'inclou.
+## Documentation
+
+See the **[User guide](docs/USER_GUIDE.md)** for a walkthrough of every screen.
+
+## Requirements of the generated code
+
+- CodeIgniter **4.7** or later, PHP **8.2** or later.
+- Designed for **MySQL / MariaDB** (`after`, `first`, engine and comments only apply there).
+- Faker seeders need `fakerphp/faker`, already included in the `require-dev` section of the CodeIgniter app starter (`composer require --dev fakerphp/faker` otherwise).
