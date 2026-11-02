@@ -3,11 +3,13 @@
 A visual generator of **migrations** (`up()` / `down()`), **seeders** and **models** for **CodeIgniter 4.7+** (PHP 8.2+).
 Design your tables in the browser and get ready-to-use PHP files — no install, no build, nothing sent to a server.
 
+**▶ [Open the app online](https://siensis.github.io/kpmigrator)**
+
 ![Creating a table](docs/screenshots/create.png)
 
 ## How it works
 
-1. **Open `index.html`** in any modern browser. It starts with an empty project.
+1. **Open the app** at [siensis.github.io/kpmigrator](https://siensis.github.io/kpmigrator), or open `index.html` locally in any modern browser. It starts with an empty project.
 2. **Design your tables** in *Create table*: add columns, keys, indexes and foreign keys. You can add several tables to the same project, load a template or import existing tables with **Import SQL** (paste the output of `SHOW CREATE TABLE`).
 3. **Alter existing tables** in *Alter table*: add operations (add, drop, modify or rename columns, indexes, foreign keys…). The `down()` method is generated automatically in reverse order.
 4. **Check the result** on the right panel: Migration, Seeder, Model, DatabaseSeeder or JSON. Errors and warnings are shown below the code.
