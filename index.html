@@ -526,7 +526,8 @@ function fieldsArrayPHP(entries, indent) {
 const listPHP = arr => arr.length === 1 ? q(arr[0]) : '[' + arr.map(q).join(', ') + ']';
 
 function fkName(table, cols, prefix='') { return prefix + table + '_' + cols.join('_') + '_foreign'; }
-function idxName(table, cols) { return table + '_' + cols.join('_'); }
+// MySQL/MariaDB driver: default key name = columns joined by '_' (no table, no prefix)
+function idxName(table, cols) { return cols.join('_'); }
 
 function classHeader(ns, cls, uses, ctx) {
   const lines = ['<?php', '', `namespace ${ns};`, ''];
@@ -664,12 +665,12 @@ function genUpdate() {
       case 'addIndex':
       case 'dropIndex': {
         const cols = splitList(op.columns); if (!cols.length) break;
-        const nm = (op.name||'').trim();
+        const nm = (op.name||'').trim() || idxName(T0, cols);
         const add = [op.unique
           ? `$this->forge->addUniqueKey(${listPHP(cols)}${nm ? ', ' + q(nm) : ''});`
           : `$this->forge->addKey(${listPHP(cols)}${nm ? ', false, false, ' + q(nm) : ''});`,
           `$this->forge->processIndexes(${q(T0)});`];
-        const drop = [nm ? `$this->forge->dropKey(${q(T0)}, ${q(nm)}, false);` : `$this->forge->dropKey(${q(T0)}, ${q(idxName(T0, cols))});`];
+        const drop = [`$this->forge->dropKey(${q(T0)}, ${q(nm)}, false);`];
         const label = `${op.unique ? 'índex únic' : 'índex'} (${cols.join(', ')})`;
         if (op.kind === 'addIndex') { u.push(`// Afegir ${label}`, ...add); d.push(...drop); }
         else { u.push(`// Eliminar ${label}`, ...drop); d.push(...add); }
@@ -681,7 +682,7 @@ function genUpdate() {
         const isAdd = op.kind === 'addForeignKey';
         const nm = (op.name||'').trim() || (isAdd ? fkName(T0, [col]) : fkName(T0, [col], prefix));
         const add = [`$this->forge->addForeignKey(${q(col)}, ${q(op.refTable.trim())}, ${q((op.refColumn||'id').trim())}, ${q(op.onUpdate)}, ${q(op.onDelete)}, ${q(nm)});`, `$this->forge->processIndexes(${q(T0)});`];
-        const drop = [`$this->forge->dropForeignKey(${q(T0)}, ${q(nm)});`];
+        const drop = [`$this->forge->dropForeignKey(${q(T0)}, ${q(nm)});`, `// MySQL conserva l'índex creat per la FK. Si cal, elimina'l: $this->forge->dropKey(${q(T0)}, ${q(nm)}, false);`];
         if (isAdd) { u.push(`// Afegir clau forana ${col} → ${op.refTable}.${op.refColumn||'id'}`, ...add); d.push(...drop); }
         else { u.push(`// Eliminar clau forana ${nm}`, ...drop); d.push(...add); }
         break;
