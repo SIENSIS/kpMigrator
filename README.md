@@ -51,3 +51,7 @@ See the **[User guide](docs/USER_GUIDE.md)** for a walkthrough of every screen.
 - CodeIgniter **4.7** or later, PHP **8.2** or later.
 - Designed for **MySQL / MariaDB** (`after`, `first`, engine and comments only apply there).
 - Faker seeders need `fakerphp/faker`, already included in the `require-dev` section of the CodeIgniter app starter (`composer require --dev fakerphp/faker` otherwise).
+
+## Credits
+
+Powered by [Claude Code](https://claude.com/claude-code).
