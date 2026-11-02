@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kpMigrator · CI4 Migration Studio</title>
+<meta name="description" content="Generador visual de migracions (up/down) i seeders per a CodeIgniter 4.7+">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ea580c'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h18' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<style>
+:root{
+  --bg:#f6f7fb; --bg2:#eef0f6; --panel:#ffffff; --panel2:#f8f9fc; --line:#e3e6ef; --line2:#d2d7e3;
+  --text:#141826; --muted:#5d6579; --faint:#8a92a6;
+  --accent:#ea580c; --accent2:#f97316; --accentSoft:rgba(234,88,12,.10); --onAccent:#fff;
+  --ok:#059669; --okSoft:rgba(5,150,105,.12); --warn:#b45309; --warnSoft:rgba(217,119,6,.12); --err:#dc2626; --errSoft:rgba(220,38,38,.10);
+  --blue:#2563eb; --violet:#7c3aed; --amber:#d97706; --sky:#0284c7;
+  --code-bg:#0f1220; --code-text:#d6dcf0; --code-line:#1f2438;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px -12px rgba(16,24,40,.12);
+  --radius:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0d14; --bg2:#10131d; --panel:#141824; --panel2:#181d2b; --line:#232a3b; --line2:#2f374b;
+    --text:#e8ebf4; --muted:#9aa3b8; --faint:#6b7389;
+    --accentSoft:rgba(249,115,22,.14); --okSoft:rgba(16,185,129,.14); --warnSoft:rgba(245,158,11,.13); --errSoft:rgba(239,68,68,.14);
+    --ok:#34d399; --warn:#fbbf24; --err:#f87171; --blue:#60a5fa; --violet:#a78bfa; --amber:#fbbf24; --sky:#38bdf8;
+    --code-bg:#0a0c14; --code-line:#1a1f30;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0d14; --bg2:#10131d; --panel:#141824; --panel2:#181d2b; --line:#232a3b; --line2:#2f374b;
+  --text:#e8ebf4; --muted:#9aa3b8; --faint:#6b7389;
+  --accentSoft:rgba(249,115,22,.14); --okSoft:rgba(16,185,129,.14); --warnSoft:rgba(245,158,11,.13); --errSoft:rgba(239,68,68,.14);
+  --ok:#34d399; --warn:#fbbf24; --err:#f87171; --blue:#60a5fa; --violet:#a78bfa; --amber:#fbbf24; --sky:#38bdf8;
+  --code-bg:#0a0c14; --code-line:#1a1f30;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(900px 400px at 10% -10%,var(--accentSoft),transparent 60%),radial-gradient(700px 360px at 100% 0%,rgba(124,58,237,.07),transparent 60%)}
+button,input,select,textarea{font:inherit;color:inherit}
+code,.mono,.inp,.sel{font-variant-ligatures:none}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.i.sm{width:14px;height:14px}
+
+/* Header */
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1760px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#f97316,#dc2626);display:grid;place-items:center;color:#fff;box-shadow:0 6px 18px -6px rgba(234,88,12,.6)}
+.logo svg{width:20px;height:20px}
+.brand h1{font-size:16px;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.brand p{margin:0;font-size:12px;color:var(--muted)}
+.pill{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--accentSoft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.hactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* Buttons & inputs */
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:7px 12px;border-radius:10px;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--line2);background:var(--panel2)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--onAccent);box-shadow:0 6px 16px -8px rgba(234,88,12,.7)}
+.btn.primary:hover{background:var(--accent2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--panel2);color:var(--text)}
+.btn.icon{padding:6px;border-radius:8px}
+.btn.danger:hover{color:var(--err);background:var(--errSoft);border-color:transparent}
+.btn.sm{padding:5px 9px;font-size:12px}
+.inp,.sel,textarea.inp{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s;min-width:0}
+.inp:focus,.sel:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentSoft)}
+.inp.mono,.sel.mono{font-family:"JetBrains Mono",monospace;font-size:12.5px}
+.inp.bad{border-color:var(--err)}
+.sel{cursor:pointer;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a92a6' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+textarea.inp{resize:vertical;min-height:70px;font-family:"JetBrains Mono",monospace;font-size:12.5px}
+label.lbl{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin:0 0 5px}
+.hint{font-size:11.5px;color:var(--faint);margin-top:5px}
+
+/* Layout */
+main{max-width:1760px;margin:0 auto;padding:20px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1100px){main{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:600px){main{padding:12px 16px}.hwrap{padding:10px 16px}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.card-h h2{font-size:13px;margin:0;font-weight:650;letter-spacing:.01em;display:flex;gap:8px;align-items:center}
+.card-h .sp{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.card-b{padding:16px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:700px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.out-col{position:sticky;top:76px}
+@media (max-width:1100px){.out-col{position:static}}
+
+/* Segmented / tabs */
+.seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;min-width:0;border:0;background:transparent;padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+.seg button.on svg{color:var(--accent)}
+.seg.big button{padding:11px 12px;font-size:13.5px}
+.seg .sub{font-weight:500;font-size:11px;color:var(--faint)}
+@media (max-width:760px){.seg .sub{display:none}.hactions .sel{min-width:0!important;flex:1 1 100%}}
+.grid>*{min-width:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:0 10px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:12px 12px 11px;cursor:pointer;color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:7px;white-space:nowrap;margin-bottom:-1px}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+.badge{font-size:10.5px;font-weight:700;min-width:18px;height:18px;padding:0 5px;border-radius:99px;display:inline-grid;place-items:center;background:var(--bg2);color:var(--muted);border:1px solid var(--line)}
+.tabs button.on .badge{background:var(--accentSoft);color:var(--accent);border-color:transparent}
+.badge.err{background:var(--errSoft);color:var(--err);border-color:transparent}
+.badge.warn{background:var(--warnSoft);color:var(--warn);border-color:transparent}
+
+/* Field rows */
+.list{display:flex;flex-direction:column;gap:10px}
+.frow{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:10px;transition:border-color .15s}
+.frow:hover{border-color:var(--line2)}
+.frow-main{display:grid;grid-template-columns:auto minmax(120px,1.6fr) minmax(110px,1fr) minmax(80px,.8fr) minmax(120px,1fr) auto;gap:8px;align-items:center}
+.frow-main.nokey{grid-template-columns:auto minmax(120px,1.6fr) minmax(110px,1fr) minmax(80px,.8fr) auto}
+.frow-main.noorder{grid-template-columns:minmax(120px,1.6fr) minmax(110px,1fr) minmax(80px,.8fr)}
+.frow-flags{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.ord{display:flex;flex-direction:column;align-items:center;color:var(--faint)}
+.ord button{border:0;background:none;padding:0 2px;cursor:pointer;color:var(--faint);line-height:0}
+.ord button:hover{color:var(--text)}
+.ord span{font:600 10px "JetBrains Mono",monospace}
+.acts{display:flex;gap:2px;justify-content:flex-end}
+@media (max-width:760px){
+  .frow-main,.frow-main.nokey,.frow-main.noorder{grid-template-columns:1fr 1fr}
+  .frow-main .ord{display:none}
+  .frow-main .acts{grid-column:1/-1}
+}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;transition:.15s}
+.chip input{display:none}
+.chip:hover{border-color:var(--line2);color:var(--text)}
+.chip:has(input:checked){background:var(--accentSoft);border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+.chip.dis{opacity:.4;pointer-events:none}
+.mini{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.mini .inp{padding:4px 8px;font-size:12px;width:auto}
+.k-primary{color:var(--amber)!important}.k-unique{color:var(--violet)!important}.k-index{color:var(--sky)!important}
+.quick{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.quick .lbl2{font-size:11.5px;font-weight:600;color:var(--faint);margin-right:2px}
+.empty{border:1.5px dashed var(--line2);border-radius:12px;padding:28px 16px;text-align:center;color:var(--muted)}
+.empty h3{margin:6px 0 4px;font-size:14px;color:var(--text)}
+.empty p{margin:0 0 12px;font-size:12.5px}
+.empty .quick{justify-content:center}
+
+/* Operations */
+.op{border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
+.op-h{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.op-ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none}
+.op-ic.add{background:var(--okSoft);color:var(--ok)}.op-ic.drop{background:var(--errSoft);color:var(--err)}.op-ic.mod{background:var(--warnSoft);color:var(--warn)}.op-ic.idx{background:rgba(2,132,199,.12);color:var(--sky)}.op-ic.fk{background:rgba(124,58,237,.12);color:var(--violet)}.op-ic.raw{background:var(--bg2);color:var(--muted)}
+.op-t{font-weight:650;font-size:13px}
+.op-s{font-size:11.5px;color:var(--faint);font-family:"JetBrains Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.op-b{padding:12px;display:flex;flex-direction:column;gap:10px}
+.op-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.op-menu button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:9px 10px;cursor:pointer;transition:.15s}
+.op-menu button:hover{border-color:var(--accent);background:var(--accentSoft)}
+.op-menu b{display:block;font-size:12.5px;font-weight:600}
+.op-menu small{display:block;font-size:11px;color:var(--faint)}
+.sub-h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:8px}
+.sub-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.arrow-sep{display:flex;align-items:center;justify-content:center;color:var(--faint)}
+
+/* Seeder table */
+.stbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+.stbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;padding:8px;border-bottom:1px solid var(--line)}
+.stbl td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.stbl tr:last-child td{border-bottom:0}
+.stbl .prev{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+@media (max-width:760px){.stbl .hide-sm{display:none}}
+
+/* Output */
+.out-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.out-bar .seg{flex:1;min-width:260px}
+.out-bar .seg button{padding:7px 10px;font-size:12.5px}
+.fname{display:flex;align-items:center;gap:8px;padding:9px 14px;font:500 12px "JetBrains Mono",monospace;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel2);min-width:0}
+.fname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fname .path{color:var(--faint)}
+.code{background:var(--code-bg);color:var(--code-text);margin:0;padding:16px 0;overflow:auto;max-height:calc(100vh - 330px);min-height:420px;font:12.5px/1.6 "JetBrains Mono",monospace;tab-size:4}
+@media (max-width:1100px){.code{max-height:640px}}
+.code code{display:block;padding:0 18px;white-space:pre;min-width:max-content}
+.code .ln{display:inline-block;width:2.6em;margin-left:-6px;margin-right:14px;text-align:right;color:#3b4360;user-select:none}
+.hljs-keyword,.hljs-meta .hljs-keyword{color:#c792ea}.hljs-string{color:#c3e88d}.hljs-variable,.hljs-template-variable{color:#f78c6c}.hljs-comment{color:#5c6688;font-style:italic}
+.hljs-title,.hljs-title.class_,.hljs-title.function_{color:#82aaff}.hljs-number{color:#f78c6c}.hljs-literal{color:#ff9cac}.hljs-built_in{color:#ffcb6b}.hljs-meta{color:#89ddff}.hljs-params{color:#d6dcf0}.hljs-operator,.hljs-punctuation{color:#89ddff}.hljs-attr{color:#ffcb6b}
+.issues{padding:12px 14px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line)}
+.issue{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:7px 10px;border-radius:9px}
+.issue svg{margin-top:2px}
+.issue.err{background:var(--errSoft);color:var(--err)}.issue.warn{background:var(--warnSoft);color:var(--warn)}.issue.ok{background:var(--okSoft);color:var(--ok)}.issue.info{background:var(--bg2);color:var(--muted)}
+.issue span{color:var(--text)}
+.steps{padding:12px 14px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.cmd{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:6px 6px 6px 10px;font:12px "JetBrains Mono",monospace;min-width:0}
+.cmd code{flex:1;overflow-x:auto;white-space:nowrap}
+.cmd .c{color:var(--faint)}
+
+/* Toast */
+#toast{position:fixed;bottom:22px;right:22px;z-index:99;background:var(--text);color:var(--bg);padding:10px 14px;border-radius:11px;font-size:13px;font-weight:500;display:flex;gap:8px;align-items:center;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;max-width:calc(100vw - 44px)}
+#toast.show{opacity:1;transform:none}
+#toast.err{background:var(--err);color:#fff}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+details.adv summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::before{content:"▸";transition:.15s;display:inline-block}
+details.adv[open] summary::before{transform:rotate(90deg)}
+details.adv[open] summary{margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;user-select:none}
+.sw input{appearance:none;width:32px;height:18px;border-radius:99px;background:var(--line2);position:relative;cursor:pointer;transition:.15s;margin:0;flex:none}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.sw input:checked{background:var(--accent)}
+.sw input:checked::after{left:16px}
+footer{max-width:1760px;margin:0 auto;padding:4px 20px 28px;color:var(--faint);font-size:12px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="brand">
+      <div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+      <div>
+        <h1>kpMigrator <span class="pill">CodeIgniter 4.7 · PHP 8.2+</span></h1>
+        <p>Migracions (up/down) i seeders per a CI4, de forma visual</p>
+      </div>
+    </div>
+    <div class="hactions">
+      <select id="tplSelect" class="sel" style="width:auto;min-width:200px" aria-label="Plantilles">
+        <option value="">Carregar plantilla…</option>
+        <optgroup label="Crear taula">
+          <option value="c:empty">Taula buida</option>
+          <option value="c:users">Usuaris</option>
+          <option value="c:categories">Categories</option>
+          <option value="c:products">Productes</option>
+          <option value="c:posts">Articles de blog</option>
+          <option value="c:orders">Comandes</option>
+        </optgroup>
+        <optgroup label="Modificar taula">
+          <option value="u:phone">Afegir telèfon a users</option>
+          <option value="u:rename">Renombrar i modificar columna</option>
+          <option value="u:fk">Afegir relació (FK) a posts</option>
+        </optgroup>
+      </select>
+      <button class="btn" data-action="share" title="Copia un enllaç amb tot l'esquema"><svg class="i" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>Compartir</button>
+      <button class="btn" data-action="export-json"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
+      <label class="btn" style="cursor:pointer"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Importar<input type="file" id="importInput" accept=".json,application/json" class="sr"></label>
+      <button class="btn ghost" data-action="reset" title="Reinicia tot l'esquema"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>Reiniciar</button>
+      <button class="btn icon ghost" data-action="theme" title="Canviar tema" aria-label="Canviar tema"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="col" id="editor"></section>
+
+  <section class="col out-col">
+    <div class="card" style="overflow:hidden">
+      <div class="out-bar">
+        <div class="seg" id="outSeg">
+          <button data-action="out" data-v="migration">Migració</button>
+          <button data-action="out" data-v="seeder">Seeder</button>
+          <button data-action="out" data-v="json">JSON</button>
+        </div>
+        <button class="btn" data-action="copy"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
+        <button class="btn primary" data-action="download"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Descarregar</button>
+      </div>
+      <div class="fname"><svg class="i sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span><span class="path" id="fpath"></span><span id="fname"></span></span>
+        <button class="btn icon ghost" style="margin-left:auto" data-action="new-ts" title="Nou timestamp (data/hora actual)"><svg class="i sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></button>
+      </div>
+      <pre class="code"><code id="code"></code></pre>
+      <div class="issues" id="issues"></div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Tot es genera al navegador: res s'envia enlloc. L'estat es desa automàticament en aquest navegador.</span>
+  <span>Compatible amb <a href="https://codeigniter.com/user_guide/dbmgmt/forge.html" target="_blank" rel="noopener">Database Forge</a> de CodeIgniter 4.7</span>
+</footer>
+
+<div id="toast" role="status"></div>
+<datalist id="dl-default"><option value="NULL"><option value="CURRENT_TIMESTAMP"><option value="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"><option value="0"><option value="1"></datalist>
+
+<script>
+'use strict';
+/* =========================================================================
+   ICONS
+   ========================================================================= */
+const IC = {
+  plus:'<path d="M5 12h14M12 5v14"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  cols:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  type:'<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+  term:'<path d="m4 17 6-6-6-6M12 19h8"/>',
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  dice:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="16" cy="16" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
+  table:'<path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/>',
+  wand:'<path d="m15 4 5 5M4 20 15 9M17 2v2M21 6h2M19 2l1 1"/>',
+  trash2:'<path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>',
+  colPlus:'<path d="M12 3v18M3 12h6M6 9v6"/><rect x="14" y="3" width="7" height="18" rx="1"/>',
+  colMinus:'<path d="M12 3v18M3 12h6"/><rect x="14" y="3" width="7" height="18" rx="1"/>',
+  rename:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+};
+const ic = (n, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24">${IC[n]||''}</svg>`;
+
+/* =========================================================================
+   TYPE META
+   ========================================================================= */
+const TYPES = {
+  INT:{g:'Enters',len:'opt',uns:1,ai:1,num:'int'}, BIGINT:{g:'Enters',len:'opt',uns:1,ai:1,num:'int'},
+  MEDIUMINT:{g:'Enters',len:'opt',uns:1,ai:1,num:'int'}, SMALLINT:{g:'Enters',len:'opt',uns:1,ai:1,num:'int'},
+  TINYINT:{g:'Enters',len:'opt',uns:1,ai:1,num:'int'},
+  DECIMAL:{g:'Decimals',len:'prec',uns:1,num:'dec',ph:'10,2'}, FLOAT:{g:'Decimals',len:'opt',uns:1,num:'dec',ph:'8,2'}, DOUBLE:{g:'Decimals',len:'opt',uns:1,num:'dec',ph:'16,4'},
+  VARCHAR:{g:'Text',len:'req',ph:'255',str:1}, CHAR:{g:'Text',len:'req',ph:'36',str:1},
+  TEXT:{g:'Text',nodef:1,str:1}, MEDIUMTEXT:{g:'Text',nodef:1,str:1}, LONGTEXT:{g:'Text',nodef:1,str:1},
+  ENUM:{g:'Llistes',len:'vals',ph:'actiu, inactiu'}, SET:{g:'Llistes',len:'vals',ph:'a, b, c'},
+  DATE:{g:'Data i hora',dt:1}, DATETIME:{g:'Data i hora',dt:1,ts:1}, TIMESTAMP:{g:'Data i hora',dt:1,ts:1}, TIME:{g:'Data i hora',dt:1}, YEAR:{g:'Data i hora',dt:1,num:'int'},
+  BOOLEAN:{g:'Altres',num:'bool'}, JSON:{g:'Altres',nodef:1}, BLOB:{g:'Altres',nodef:1}, LONGBLOB:{g:'Altres',nodef:1},
+};
+const TYPE_OPTIONS = (() => { const groups = {}; for (const [k,v] of Object.entries(TYPES)) (groups[v.g] ||= []).push(k); return groups; })();
+const FK_ACTIONS = ['CASCADE','SET NULL','RESTRICT','NO ACTION','SET DEFAULT'];
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const uid = () => Math.random().toString(36).slice(2, 10);
+function F(name, type='VARCHAR', o={}) {
+  return Object.assign({ id:uid(), name, type, length:'', unsigned:false, nullable:false, ai:false, def:'', key:'none', comment:'' }, o);
+}
+const idField = () => F('id','INT',{unsigned:true, ai:true, key:'primary'});
+const tsFields = () => [F('created_at','DATETIME',{nullable:true}), F('updated_at','DATETIME',{nullable:true})];
+
+function ts(d = new Date()) {
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+const TEMPLATES = {
+  empty: () => ({ table:'nova_taula', fields:[idField(), ...tsFields()], fks:[], indexes:[] }),
+  users: () => ({ table:'users', fields:[
+    idField(),
+    F('username','VARCHAR',{length:'100', key:'unique'}),
+    F('email','VARCHAR',{length:'255', key:'unique'}),
+    F('password_hash','VARCHAR',{length:'255'}),
+    F('first_name','VARCHAR',{length:'100'}),
+    F('last_name','VARCHAR',{length:'150'}),
+    F('role','ENUM',{length:'admin, editor, user', def:'user'}),
+    F('is_active','BOOLEAN',{def:'1'}),
+    ...tsFields(), F('deleted_at','DATETIME',{nullable:true}),
+  ], fks:[], indexes:[] }),
+  categories: () => ({ table:'categories', fields:[
+    idField(),
+    F('parent_id','INT',{unsigned:true, nullable:true, key:'index'}),
+    F('name','VARCHAR',{length:'120'}),
+    F('slug','VARCHAR',{length:'140', key:'unique'}),
+    F('description','TEXT',{nullable:true}),
+    F('sort_order','SMALLINT',{unsigned:true, def:'0'}),
+    ...tsFields(),
+  ], fks:[], indexes:[] }),
+  products: () => { const cat = F('category_id','INT',{unsigned:true, nullable:true, key:'index'}); return { table:'products', fields:[
+    idField(), cat,
+    F('sku','VARCHAR',{length:'40', key:'unique'}),
+    F('title','VARCHAR',{length:'255'}),
+    F('slug','VARCHAR',{length:'255', key:'unique'}),
+    F('description','TEXT',{nullable:true}),
+    F('price','DECIMAL',{length:'10,2', unsigned:true, def:'0.00'}),
+    F('stock','INT',{unsigned:true, def:'0'}),
+    F('status','ENUM',{length:'published, draft, archived', def:'draft'}),
+    F('image','VARCHAR',{length:'255', nullable:true}),
+    ...tsFields(), F('deleted_at','DATETIME',{nullable:true}),
+  ], fks:[{id:uid(), column:'category_id', refTable:'categories', refColumn:'id', onUpdate:'CASCADE', onDelete:'SET NULL'}], indexes:[] }; },
+  posts: () => ({ table:'posts', fields:[
+    idField(),
+    F('user_id','INT',{unsigned:true, key:'index'}),
+    F('title','VARCHAR',{length:'255'}),
+    F('slug','VARCHAR',{length:'255', key:'unique'}),
+    F('excerpt','VARCHAR',{length:'500', nullable:true}),
+    F('body','LONGTEXT'),
+    F('published_at','DATETIME',{nullable:true}),
+    ...tsFields(),
+  ], fks:[{id:uid(), column:'user_id', refTable:'users', refColumn:'id', onUpdate:'CASCADE', onDelete:'CASCADE'}], indexes:[] }),
+  orders: () => ({ table:'orders', fields:[
+    F('id','BIGINT',{unsigned:true, ai:true, key:'primary'}),
+    F('order_number','VARCHAR',{length:'30', key:'unique'}),
+    F('user_id','INT',{unsigned:true}),
+    F('total_amount','DECIMAL',{length:'10,2', unsigned:true, def:'0.00'}),
+    F('status','ENUM',{length:'pending, processing, completed, cancelled', def:'pending'}),
+    F('notes','TEXT',{nullable:true}),
+    F('created_at','DATETIME',{def:'CURRENT_TIMESTAMP'}),
+    F('updated_at','DATETIME',{nullable:true}),
+  ], fks:[{id:uid(), column:'user_id', refTable:'users', refColumn:'id', onUpdate:'CASCADE', onDelete:'RESTRICT'}],
+     indexes:[{id:uid(), columns:'user_id, status', unique:false, name:''}] }),
+};
+
+const UPDATE_TEMPLATES = {
+  phone: () => ({ table:'users', ops:[
+    { id:uid(), kind:'addColumn', field:F('phone','VARCHAR',{length:'20', nullable:true}), after:'email', first:false },
+    { id:uid(), kind:'addIndex', columns:'phone', unique:false, name:'' },
+  ]}),
+  rename: () => ({ table:'products', ops:[
+    { id:uid(), kind:'modifyColumn', column:'title', from:F('title','VARCHAR',{length:'255'}), to:F('name','VARCHAR',{length:'200'}) },
+    { id:uid(), kind:'dropColumn', field:F('image','VARCHAR',{length:'255', nullable:true}), after:'status' },
+  ]}),
+  fk: () => ({ table:'posts', ops:[
+    { id:uid(), kind:'addColumn', field:F('category_id','INT',{unsigned:true, nullable:true}), after:'user_id', first:false },
+    { id:uid(), kind:'addForeignKey', column:'category_id', refTable:'categories', refColumn:'id', onUpdate:'CASCADE', onDelete:'SET NULL', name:'' },
+  ]}),
+};
+
+function defaultState() {
+  return {
+    v: 3,
+    mode: 'create',
+    settings: { migrationNs:'App\\Database\\Migrations', seederNs:'App\\Database\\Seeds', dbPrefix:'', dbGroup:'', autoClass:true, className:'', timestamp:ts() },
+    create: Object.assign({ ifNotExists:false, ifExists:true, engine:'', comment:'' }, TEMPLATES.users()),
+    update: { table:'users', ops:[] },
+    seeder: { mode:'faker', count:25, locale:'es_ES', nulls:true, truncate:false, chunk:100, seed:'', jsSeed:12345, fkMax:10, gens:{} },
+  };
+}
+
+let state = defaultState();
+let ui = { tab:'fields', out:'migration' };
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const q = s => "'" + String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'") + "'";
+const pascal = s => String(s||'').split(/[^A-Za-z0-9]+/).filter(Boolean).map(w => w[0].toUpperCase()+w.slice(1)).join('');
+const camel = s => { const p = pascal(s); return p ? p[0].toLowerCase()+p.slice(1) : 'x'; };
+const isIdent = s => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s||'');
+const splitList = s => String(s||'').split(',').map(x => x.trim().replace(/^['"`]|['"`]$/g,'')).filter(x => x !== '');
+const T = f => TYPES[f.type] || {};
+
+function setPath(path, value) {
+  const parts = path.split('.');
+  let obj = state;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const m = parts[i].match(/^(\w+)#(\w+)$/);
+    obj = m ? (obj[m[1]] || []).find(x => x.id === m[2]) : obj[parts[i]];
+    if (obj == null) return;
+  }
+  obj[parts[parts.length-1]] = value;
+}
+
+/* =========================================================================
+   PHP CODE: FIELDS
+   ========================================================================= */
+function constraintPHP(f) {
+  const t = T(f), l = String(f.length||'').trim();
+  if (t.len === 'vals') { const v = splitList(l); return v.length ? '[' + v.map(q).join(', ') + ']' : null; }
+  if (!t.len || l === '') return null;
+  if (/^\d+$/.test(l)) return l;
+  return q(l.replace(/\s+/g,''));
+}
+
+function defaultPHP(f, ctx) {
+  const d = String(f.def ?? '').trim();
+  if (d === '') return null;
+  if (/^null$/i.test(d)) return 'null';
+  if (/^current_timestamp(\(\))?(\s+on\s+update\s+current_timestamp(\(\))?)?$/i.test(d)) { ctx.raw = true; return `new RawSql(${q(d.toUpperCase())})`; }
+  const t = T(f);
+  if (t.num === 'bool') { if (/^(true|1)$/i.test(d)) return '1'; if (/^(false|0)$/i.test(d)) return '0'; }
+  if (t.num && /^-?\d+(\.\d+)?$/.test(d)) return d;
+  return q(d.replace(/^'(.*)'$/,'$1'));
+}
+
+/** Returns [key, phpValue][] for a field definition. */
+function fieldAttrs(f, ctx, extra = {}) {
+  const t = T(f), a = [];
+  if (extra.newName) a.push(['name', q(extra.newName)]);
+  a.push(['type', q(f.type)]);
+  const c = constraintPHP(f); if (c) a.push(['constraint', c]);
+  if (t.uns && f.unsigned) a.push(['unsigned', 'true']);
+  if (t.ai && f.ai) a.push(['auto_increment', 'true']);
+  a.push(['null', f.nullable ? 'true' : 'false']);
+  const d = defaultPHP(f, ctx); if (d !== null && !(f.ai)) a.push(['default', d]);
+  if (f.comment && f.comment.trim()) a.push(['comment', q(f.comment.trim())]);
+  if (extra.after) a.push(['after', q(extra.after)]);
+  else if (extra.first) a.push(['first', 'true']);
+  return a;
+}
+
+function phpAssoc(pairs, indent) {
+  const w = Math.max(...pairs.map(p => q(p[0]).length));
+  return pairs.map(([k, v]) => `${indent}${q(k).padEnd(w)} => ${v},`).join('\n');
+}
+
+function fieldsArrayPHP(entries, indent) {
+  // entries: [{key, attrs}]
+  const out = ['['];
+  for (const e of entries) {
+    out.push(`${indent}    ${q(e.key)} => [`);
+    out.push(phpAssoc(e.attrs, indent + '        '));
+    out.push(`${indent}    ],`);
+  }
+  out.push(indent + ']');
+  return out.join('\n');
+}
+
+const listPHP = arr => arr.length === 1 ? q(arr[0]) : '[' + arr.map(q).join(', ') + ']';
+
+function fkName(table, cols, prefix='') { return prefix + table + '_' + cols.join('_') + '_foreign'; }
+function idxName(table, cols) { return table + '_' + cols.join('_'); }
+
+function classHeader(ns, cls, uses, ctx) {
+  const lines = ['<?php', '', `namespace ${ns};`, ''];
+  uses.forEach(u => lines.push(`use ${u};`));
+  lines.push('', `class ${cls} extends Migration`, '{');
+  if (state.settings.dbGroup.trim()) lines.push(`    protected $DBGroup = ${q(state.settings.dbGroup.trim())};`, '');
+  return lines.join('\n');
+}
+
+function wrapMigration(cls, upLines, downLines, ctx) {
+  const ns = state.settings.migrationNs.trim() || 'App\\Database\\Migrations';
+  const uses = ['CodeIgniter\\Database\\Migration'];
+  if (ctx.raw) uses.push('CodeIgniter\\Database\\RawSql');
+  const body = l => l.map(x => x === '' ? '' : x.split('\n').map(y => y === '' ? '' : '        ' + y).join('\n')).join('\n');
+  return classHeader(ns, cls, uses.sort(), ctx) + '\n' +
+`    public function up()
+    {
+${body(upLines)}
+    }
+
+    public function down()
+    {
+${body(downLines)}
+    }
+}
+`;
+}
+
+/* ---------- CREATE ---------- */
+function genCreate() {
+  const s = state.create, ctx = { raw:false };
+  const tbl = s.table.trim() || 'nova_taula';
+  const up = [];
+  const fields = s.fields.filter(f => f.name.trim());
+  up.push('$this->forge->addField(' + fieldsArrayPHP(fields.map(f => ({ key:f.name.trim(), attrs:fieldAttrs(f, ctx) })), '') + ');');
+
+  const keys = [];
+  const pk = fields.filter(f => f.key === 'primary').map(f => f.name.trim());
+  if (pk.length) keys.push(`$this->forge->addPrimaryKey(${listPHP(pk)});`);
+  fields.filter(f => f.key === 'unique').forEach(f => keys.push(`$this->forge->addUniqueKey(${q(f.name.trim())});`));
+  fields.filter(f => f.key === 'index').forEach(f => keys.push(`$this->forge->addKey(${q(f.name.trim())});`));
+  (s.indexes||[]).forEach(ix => {
+    const cols = splitList(ix.columns); if (!cols.length) return;
+    const nm = (ix.name||'').trim();
+    keys.push(ix.unique
+      ? `$this->forge->addUniqueKey(${listPHP(cols)}${nm ? ', ' + q(nm) : ''});`
+      : `$this->forge->addKey(${listPHP(cols)}${nm ? ', false, false, ' + q(nm) : ''});`);
+  });
+  s.fks.forEach(fk => {
+    if (!fk.column || !fk.refTable) return;
+    keys.push(`$this->forge->addForeignKey(${q(fk.column)}, ${q(fk.refTable.trim())}, ${q((fk.refColumn||'id').trim())}, ${q(fk.onUpdate)}, ${q(fk.onDelete)});`);
+  });
+  if (keys.length) up.push('', ...keys);
+
+  const attrs = [];
+  if (s.engine) attrs.push(`'ENGINE' => ${q(s.engine)}`);
+  if (s.comment && s.comment.trim()) attrs.push(`'COMMENT' => ${q(s.comment.trim())}`);
+  const args = [q(tbl)];
+  if (s.ifNotExists || attrs.length) args.push(s.ifNotExists ? 'true' : 'false');
+  if (attrs.length) args.push('[' + attrs.join(', ') + ']');
+  up.push('', `$this->forge->createTable(${args.join(', ')});`);
+
+  const down = [`$this->forge->dropTable(${q(tbl)}${s.ifExists ? ', true' : ''});`];
+  return wrapMigration(className(), up, down, ctx);
+}
+
+/* ---------- UPDATE ---------- */
+const OP_META = {
+  addColumn:      { label:'Afegir columna',          ic:'colPlus', cls:'add',  desc:'addColumn()' },
+  dropColumn:     { label:'Eliminar columna',        ic:'colMinus',cls:'drop', desc:'dropColumn()' },
+  modifyColumn:   { label:'Modificar / renombrar',   ic:'edit',    cls:'mod',  desc:'modifyColumn()' },
+  addIndex:       { label:'Afegir índex',            ic:'search',  cls:'idx',  desc:'addKey() + processIndexes()' },
+  dropIndex:      { label:'Eliminar índex',          ic:'x',       cls:'drop', desc:'dropKey()' },
+  addForeignKey:  { label:'Afegir clau forana',      ic:'link',    cls:'fk',   desc:'addForeignKey() + processIndexes()' },
+  dropForeignKey: { label:'Eliminar clau forana',    ic:'link',    cls:'drop', desc:'dropForeignKey()' },
+  renameTable:    { label:'Renombrar taula',         ic:'type',    cls:'mod',  desc:'renameTable()' },
+  rawSql:         { label:'SQL personalitzat',       ic:'term',    cls:'raw',  desc:'$this->db->query()' },
+};
+
+function newOp(kind) {
+  const base = { id:uid(), kind };
+  const known = knownColumns();
+  switch (kind) {
+    case 'addColumn': return { ...base, field:F('nova_columna','VARCHAR',{length:'255', nullable:true}), after:'', first:false };
+    case 'dropColumn': return { ...base, field:F('', 'VARCHAR', {length:'255', nullable:true}), after:'' };
+    case 'modifyColumn': return { ...base, column:'', from:F('','VARCHAR',{length:'255'}), to:F('','VARCHAR',{length:'255'}) };
+    case 'addIndex': return { ...base, columns:'', unique:false, name:'' };
+    case 'dropIndex': return { ...base, columns:'', unique:false, name:'' };
+    case 'addForeignKey': return { ...base, column:'', refTable:'', refColumn:'id', onUpdate:'CASCADE', onDelete:'CASCADE', name:'' };
+    case 'dropForeignKey': return { ...base, column:'', refTable:'', refColumn:'id', onUpdate:'CASCADE', onDelete:'CASCADE', name:'' };
+    case 'renameTable': return { ...base, newName:'' };
+    case 'rawSql': return { ...base, up:'', down:'' };
+  }
+}
+
+function splitSql(sql) { return String(sql||'').split(/;\s*(?:\n|$)/).map(s => s.trim()).filter(Boolean); }
+
+function genUpdate() {
+  const ctx = { raw:false };
+  const up = [], downBlocks = [];
+  let table = state.update.table.trim() || 'taula';
+  const prefix = state.settings.dbPrefix || '';
+  for (const op of state.update.ops) {
+    const u = [], d = [];
+    const T0 = table;
+    switch (op.kind) {
+      case 'addColumn': {
+        const f = op.field, n = f.name.trim(); if (!n) break;
+        u.push(`// Afegir columna '${n}'`);
+        u.push(`$this->forge->addColumn(${q(T0)}, ${fieldsArrayPHP([{ key:n, attrs:fieldAttrs(f, ctx, { after:op.after?.trim(), first:op.first }) }], '')});`);
+        if (f.key === 'unique' || f.key === 'index') {
+          u.push(f.key === 'unique' ? `$this->forge->addUniqueKey(${q(n)});` : `$this->forge->addKey(${q(n)});`, `$this->forge->processIndexes(${q(T0)});`);
+        } else if (f.key === 'primary') {
+          u.push(`$this->forge->addPrimaryKey(${q(n)});`, `$this->forge->processIndexes(${q(T0)});`);
+        }
+        d.push(`$this->forge->dropColumn(${q(T0)}, ${q(n)});`);
+        break;
+      }
+      case 'dropColumn': {
+        const f = op.field, n = f.name.trim(); if (!n) break;
+        u.push(`// Eliminar columna '${n}'`, `$this->forge->dropColumn(${q(T0)}, ${q(n)});`);
+        d.push(`$this->forge->addColumn(${q(T0)}, ${fieldsArrayPHP([{ key:n, attrs:fieldAttrs(f, ctx, { after:op.after?.trim() }) }], '')});`);
+        if (f.key === 'unique' || f.key === 'index') d.push(f.key === 'unique' ? `$this->forge->addUniqueKey(${q(n)});` : `$this->forge->addKey(${q(n)});`, `$this->forge->processIndexes(${q(T0)});`);
+        break;
+      }
+      case 'modifyColumn': {
+        const oldName = (op.column || op.from.name || '').trim(), newName = (op.to.name || '').trim() || oldName;
+        if (!oldName) break;
+        const renamed = newName !== oldName;
+        u.push(renamed ? `// Renombrar '${oldName}' → '${newName}' i redefinir` : `// Modificar columna '${oldName}'`);
+        u.push(`$this->forge->modifyColumn(${q(T0)}, ${fieldsArrayPHP([{ key:oldName, attrs:fieldAttrs(op.to, ctx, { newName: renamed ? newName : null }) }], '')});`);
+        d.push(`$this->forge->modifyColumn(${q(T0)}, ${fieldsArrayPHP([{ key:newName, attrs:fieldAttrs(op.from, ctx, { newName: renamed ? oldName : null }) }], '')});`);
+        break;
+      }
+      case 'addIndex':
+      case 'dropIndex': {
+        const cols = splitList(op.columns); if (!cols.length) break;
+        const nm = (op.name||'').trim();
+        const add = [op.unique
+          ? `$this->forge->addUniqueKey(${listPHP(cols)}${nm ? ', ' + q(nm) : ''});`
+          : `$this->forge->addKey(${listPHP(cols)}${nm ? ', false, false, ' + q(nm) : ''});`,
+          `$this->forge->processIndexes(${q(T0)});`];
+        const drop = [nm ? `$this->forge->dropKey(${q(T0)}, ${q(nm)}, false);` : `$this->forge->dropKey(${q(T0)}, ${q(idxName(T0, cols))});`];
+        const label = `${op.unique ? 'índex únic' : 'índex'} (${cols.join(', ')})`;
+        if (op.kind === 'addIndex') { u.push(`// Afegir ${label}`, ...add); d.push(...drop); }
+        else { u.push(`// Eliminar ${label}`, ...drop); d.push(...add); }
+        break;
+      }
+      case 'addForeignKey':
+      case 'dropForeignKey': {
+        const col = (op.column||'').trim(); if (!col || !op.refTable) break;
+        const isAdd = op.kind === 'addForeignKey';
+        const nm = (op.name||'').trim() || (isAdd ? fkName(T0, [col]) : fkName(T0, [col], prefix));
+        const add = [`$this->forge->addForeignKey(${q(col)}, ${q(op.refTable.trim())}, ${q((op.refColumn||'id').trim())}, ${q(op.onUpdate)}, ${q(op.onDelete)}, ${q(nm)});`, `$this->forge->processIndexes(${q(T0)});`];
+        const drop = [`$this->forge->dropForeignKey(${q(T0)}, ${q(nm)});`];
+        if (isAdd) { u.push(`// Afegir clau forana ${col} → ${op.refTable}.${op.refColumn||'id'}`, ...add); d.push(...drop); }
+        else { u.push(`// Eliminar clau forana ${nm}`, ...drop); d.push(...add); }
+        break;
+      }
+      case 'renameTable': {
+        const nn = (op.newName||'').trim(); if (!nn) break;
+        u.push(`// Renombrar taula '${T0}' → '${nn}'`, `$this->forge->renameTable(${q(T0)}, ${q(nn)});`);
+        d.push(`$this->forge->renameTable(${q(nn)}, ${q(T0)});`);
+        table = nn;
+        break;
+      }
+      case 'rawSql': {
+        const us = splitSql(op.up), ds = splitSql(op.down);
+        if (!us.length && !ds.length) break;
+        u.push('// SQL personalitzat', ...us.map(s => `$this->db->query(${q(s)});`));
+        if (ds.length) d.push(...ds.map(s => `$this->db->query(${q(s)});`));
+        else d.push('// (sense SQL de reversió definit)');
+        break;
+      }
+    }
+    if (u.length) { if (up.length) up.push(''); up.push(...u); }
+    if (d.length) downBlocks.push(d);
+  }
+  if (!up.length) up.push('// Afegeix operacions des del panell "Operacions"');
+  const down = [];
+  downBlocks.reverse().forEach((b, i) => { if (i) down.push(''); down.push(...b); });
+  if (!down.length) down.push('//');
+  return wrapMigration(className(), up, down, ctx);
+}
+
+/* ---------- CLASS NAMES ---------- */
+function autoClassName() {
+  if (state.mode === 'create') return 'Create' + (pascal(state.create.table) || 'Nova') + 'Table';
+  const t = pascal(state.update.table) || 'Taula';
+  const ops = state.update.ops;
+  if (ops.length === 1) {
+    const o = ops[0];
+    switch (o.kind) {
+      case 'addColumn': if (o.field.name) return `Add${pascal(o.field.name)}To${t}`; break;
+      case 'dropColumn': if (o.field.name) return `Drop${pascal(o.field.name)}From${t}`; break;
+      case 'modifyColumn': {
+        const a = o.column || o.from.name, b = o.to.name;
+        if (a && b && a !== b) return `Rename${pascal(a)}To${pascal(b)}In${t}`;
+        if (a) return `Modify${pascal(a)}In${t}`; break;
+      }
+      case 'addIndex': return `AddIndexTo${t}`;
+      case 'dropIndex': return `DropIndexFrom${t}`;
+      case 'addForeignKey': if (o.column) return `Add${pascal(o.column)}ForeignKeyTo${t}`; break;
+      case 'dropForeignKey': if (o.column) return `Drop${pascal(o.column)}ForeignKeyFrom${t}`; break;
+      case 'renameTable': if (o.newName) return `Rename${t}To${pascal(o.newName)}`; break;
+    }
+  }
+  if (ops.length > 1 && ops.every(o => o.kind === 'addColumn')) return `AddColumnsTo${t}`;
+  return `Update${t}Table`;
+}
+function className() {
+  const s = state.settings;
+  return (s.autoClass ? autoClassName() : (s.className.trim() || autoClassName()));
+}
+const seederClass = () => (pascal(state.create.table) || 'Nova') + 'Seeder';
+
+/* =========================================================================
+   SEEDER
+   ========================================================================= */
+// Deterministic RNG for the static mode / previews
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let R = rng(1);
+const ri = (a, b) => Math.floor(R() * (b - a + 1)) + a;
+const pick = arr => arr[Math.floor(R() * arr.length)];
+const P = {
+  first:['Jordi','Marta','Pau','Laia','Marc','Núria','Joan','Anna','Albert','Clara','Sergi','Júlia','Arnau','Paula','Oriol','Carla','Xavier','Elena','David','Mireia','Lucía','Hugo','Martina','Daniel','Sofía'],
+  last:['Garcia','Martí','Puig','Ferrer','Vila','Soler','Serra','Font','Roca','Pujol','Vidal','Mas','Coll','Riera','Casals','López','Sánchez','Fernández','Torres','Navarro','Romero','Ruiz'],
+  city:['Barcelona','Girona','Lleida','Tarragona','Palma','València','Sabadell','Terrassa','Reus','Manresa','Vic','Mataró','Figueres','Igualada','Olot','Madrid','Sevilla','Bilbao'],
+  street:['Carrer Major','Avinguda Diagonal','Carrer de la Pau','Passeig de Gràcia','Rambla Nova','Carrer del Sol','Plaça Catalunya','Carrer Nou','Avinguda Meridiana'],
+  company:['Tecnologies','Solucions','Serveis','Digital','Consulting','Grup','Innova','Systems'],
+  words:'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim minim veniam quis nostrud exercitation ullamco laboris nisi aliquip commodo consequat duis aute irure reprehenderit voluptate velit esse cillum fugiat nulla pariatur excepteur sint occaecat cupidatat proident sunt culpa officia deserunt mollit anim'.split(' '),
+  jobs:['Desenvolupador','Dissenyadora','Gestor de projectes','Analista de dades','Administrativa','Comercial','Tècnic de sistemes','Professora'],
+  countries:['Espanya','França','Itàlia','Portugal','Alemanya','Andorra','Regne Unit','Països Baixos'],
+  domains:['example.com','example.org','example.net','test.cat'],
+};
+const words = n => Array.from({length:n}, () => pick(P.words)).join(' ');
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const sentence = (n = ri(5, 10)) => cap(words(n)) + '.';
+const slugify = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const pad = n => String(n).padStart(2,'0');
+const randDate = (fromDays, toDays) => { const d = new Date(Date.now() + ri(fromDays*86400, toDays*86400)*1000); return d; };
+const fmtDT = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const fmtD = d => fmtDT(d).slice(0,10);
+const hex = n => Array.from({length:n}, () => '0123456789abcdef'[ri(0,15)]).join('');
+const uuid4 = () => `${hex(8)}-${hex(4)}-4${hex(3)}-${'89ab'[ri(0,3)]}${hex(3)}-${hex(12)}`;
+const decInfo = f => { const m = String(f.length||'').match(/(\d+)\s*,\s*(\d+)/); return m ? { p:+m[1], s:+m[2] } : { p:10, s:2 }; };
+const intBounds = (f, g) => {
+  if (g && g.min !== '' && g.min != null && g.max !== '' && g.max != null) return [Number(g.min), Number(g.max)];
+  if (f.type === 'TINYINT') return [0, f.unsigned ? 255 : 127];
+  if (f.type === 'YEAR') return [1990, new Date().getFullYear()];
+  return [1, 1000];
+};
+const decBounds = (f, g) => {
+  if (g && g.min !== '' && g.min != null && g.max !== '' && g.max != null) return [Number(g.min), Number(g.max)];
+  const { p, s } = decInfo(f); const max = Math.min(Math.pow(10, p - s) - 1, 1000);
+  return [f.unsigned ? 1 : 1, max];
+};
+
+/* Generator catalog: faker(f, ctx, g) → PHP expression ; js(f, i, g) → JS value (string|number|null) */
+const GENS = {
+  skip:      { label:'— No inserir —', grp:'Control' },
+  null:      { label:'NULL', grp:'Control', faker:() => 'null', js:() => null },
+  custom:    { label:'Expressió PHP pròpia…', grp:'Control', faker:(f,c,g) => (g.custom||'').trim() || 'null', js:(f,i,g) => ({ raw:(g.custom||'').trim() || 'null' }) },
+  fk:        { label:'ID de taula relacionada (FK)', grp:'Control' },
+  firstName: { label:'Nom', grp:'Persona', max:30, faker:() => '$faker->firstName()', js:() => pick(P.first) },
+  lastName:  { label:'Cognom', grp:'Persona', max:30, faker:() => '$faker->lastName()', js:() => pick(P.last) },
+  fullName:  { label:'Nom complet', grp:'Persona', max:60, faker:() => '$faker->name()', js:() => `${pick(P.first)} ${pick(P.last)} ${pick(P.last)}` },
+  userName:  { label:'Nom d\'usuari', grp:'Persona', max:30, faker:() => '$faker->userName()', js:(f,i) => slugify(pick(P.first)).slice(0,10) + '_' + slugify(pick(P.last)).slice(0,8) + i },
+  email:     { label:'Correu electrònic', grp:'Persona', max:80, faker:() => '$faker->safeEmail()', js:(f,i) => `${slugify(pick(P.first))}.${slugify(pick(P.last))}${i}@${pick(P.domains)}` },
+  password:  { label:'Contrasenya (hash de "password")', grp:'Persona', faker:(f,c) => { c.pre.add('$password = password_hash(\'password\', PASSWORD_DEFAULT);'); return '$password'; }, js:() => '$2y$10$f5IQ5ucQkrmGjiDzWkXi6.vDhZBAVEZpBqyhU/GR6NlqPNRfx9LKC' },
+  phone:     { label:'Telèfon', grp:'Persona', max:20, faker:() => '$faker->phoneNumber()', js:() => `+34 6${ri(10,99)} ${ri(100,999)} ${ri(100,999)}` },
+  dni:       { label:'DNI / NIF', grp:'Persona', max:9, faker:(f,c) => state.seeder.locale === 'es_ES' ? '$faker->dni()' : "strtoupper($faker->bothify('########?'))", js:() => { const n = ri(10000000, 99999999); return n + 'TRWAGMYFPDXBNJZSQVHLCKE'[n % 23]; } },
+  jobTitle:  { label:'Càrrec', grp:'Persona', max:60, faker:() => '$faker->jobTitle()', js:() => pick(P.jobs) },
+  address:   { label:'Adreça', grp:'Lloc', max:100, faker:() => '$faker->streetAddress()', js:() => `${pick(P.street)}, ${ri(1,200)}` },
+  city:      { label:'Ciutat', grp:'Lloc', max:40, faker:() => '$faker->city()', js:() => pick(P.city) },
+  postcode:  { label:'Codi postal', grp:'Lloc', max:10, faker:() => '$faker->postcode()', js:() => String(ri(1000, 52999)).padStart(5,'0') },
+  country:   { label:'País', grp:'Lloc', max:50, faker:() => '$faker->country()', js:() => pick(P.countries) },
+  latitude:  { label:'Latitud', grp:'Lloc', faker:() => '$faker->latitude()', js:() => +(R()*180-90).toFixed(6) },
+  longitude: { label:'Longitud', grp:'Lloc', faker:() => '$faker->longitude()', js:() => +(R()*360-180).toFixed(6) },
+  company:   { label:'Empresa', grp:'Internet i negoci', max:60, faker:() => '$faker->company()', js:() => `${pick(P.last)} ${pick(P.company)}` },
+  url:       { label:'URL', grp:'Internet i negoci', max:100, faker:() => '$faker->url()', js:() => `https://www.${pick(P.domains)}/${slugify(words(2))}` },
+  imageUrl:  { label:'URL d\'imatge', grp:'Internet i negoci', max:120, faker:() => "'https://picsum.photos/seed/' . $faker->uuid() . '/640/480'", js:() => `https://picsum.photos/seed/${hex(8)}/640/480` },
+  slug:      { label:'Slug', grp:'Internet i negoci', max:80, faker:() => '$faker->slug()', js:(f,i) => slugify(words(ri(2,4))) + '-' + i },
+  uuid:      { label:'UUID', grp:'Internet i negoci', max:36, faker:() => '$faker->uuid()', js:() => uuid4() },
+  token:     { label:'Token aleatori (32 hex)', grp:'Internet i negoci', max:32, faker:() => 'bin2hex(random_bytes(16))', js:() => hex(32) },
+  ipv4:      { label:'Adreça IPv4', grp:'Internet i negoci', max:15, faker:() => '$faker->ipv4()', js:() => `${ri(1,223)}.${ri(0,255)}.${ri(0,255)}.${ri(1,254)}` },
+  userAgent: { label:'User agent', grp:'Internet i negoci', max:255, faker:() => '$faker->userAgent()', js:() => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36' },
+  color:     { label:'Color hex', grp:'Internet i negoci', max:7, faker:() => '$faker->hexColor()', js:() => '#' + hex(6) },
+  code:      { label:'Codi / referència', grp:'Internet i negoci', max:12, faker:() => "strtoupper($faker->bothify('???-#####'))", js:(f,i) => `${String.fromCharCode(65+ri(0,25),65+ri(0,25),65+ri(0,25))}-${String(ri(0,99999)).padStart(5,'0')}` },
+  title:     { label:'Títol', grp:'Text', max:60, faker:() => "rtrim($faker->sentence(4), '.')", js:() => cap(words(ri(3,6))) },
+  word:      { label:'Paraula', grp:'Text', max:15, faker:() => '$faker->word()', js:() => pick(P.words) },
+  sentence:  { label:'Frase', grp:'Text', max:120, faker:() => '$faker->sentence()', js:() => sentence() },
+  paragraph: { label:'Paràgraf', grp:'Text', max:400, faker:() => '$faker->paragraph()', js:() => Array.from({length:ri(3,5)}, () => sentence()).join(' ') },
+  paragraphs:{ label:'Diversos paràgrafs', grp:'Text', max:2000, faker:() => '$faker->paragraphs(3, true)', js:() => Array.from({length:3}, () => Array.from({length:ri(3,5)}, () => sentence()).join(' ')).join('\n\n') },
+  text:      { label:'Text (fins a la longitud)', grp:'Text', faker:(f) => `$faker->text(${Math.max(5, Math.min(+f.length || 200, 2000))})`, js:(f) => { let s = ''; const max = Math.max(5, Math.min(+f.length || 200, 2000)); while (s.length < max * .7) s += sentence() + ' '; return s.slice(0, max - 1).trim() + '.'; } },
+  intRange:  { label:'Enter (mín–màx)', grp:'Números', params:'range', faker:(f,c,g) => { const [a,b] = intBounds(f,g); return `$faker->numberBetween(${a}, ${b})`; }, js:(f,i,g) => { const [a,b] = intBounds(f,g); return ri(a,b); } },
+  decimal:   { label:'Decimal (mín–màx)', grp:'Números', params:'range', faker:(f,c,g) => { const [a,b] = decBounds(f,g); return `$faker->randomFloat(${decInfo(f).s}, ${a}, ${b})`; }, js:(f,i,g) => { const [a,b] = decBounds(f,g); return +(a + R()*(b-a)).toFixed(decInfo(f).s); } },
+  boolean:   { label:'Booleà (0/1)', grp:'Números', faker:() => '(int) $faker->boolean()', js:() => ri(0,1) },
+  sequence:  { label:'Seqüència (1, 2, 3…)', grp:'Números', faker:() => '$i + 1', js:(f,i) => i },
+  enum:      { label:'Valor de la llista (ENUM)', grp:'Llistes', faker:(f) => `$faker->randomElement([${splitList(f.length).map(q).join(', ')}])`, js:(f) => pick(splitList(f.length).length ? splitList(f.length) : ['']) },
+  set:       { label:'Valors de la llista (SET)', grp:'Llistes', faker:(f) => { const v = splitList(f.length); return `implode(',', $faker->randomElements([${v.map(q).join(', ')}], $faker->numberBetween(1, ${Math.max(1, v.length)})))`; }, js:(f) => { const v = splitList(f.length); return v.filter(() => R() > .5).join(',') || v[0] || ''; } },
+  dateTimePast:{ label:'Data i hora (darrer any)', grp:'Dates', faker:() => "$faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d H:i:s')", js:() => fmtDT(randDate(-365, 0)) },
+  dateTimeFuture:{ label:'Data i hora (proper any)', grp:'Dates', faker:() => "$faker->dateTimeBetween('now', '+1 year')->format('Y-m-d H:i:s')", js:() => fmtDT(randDate(0, 365)) },
+  now:       { label:'Ara (data actual)', grp:'Dates', faker:() => "date('Y-m-d H:i:s')", js:() => ({ raw:"date('Y-m-d H:i:s')" }) },
+  date:      { label:'Data', grp:'Dates', faker:() => "$faker->date('Y-m-d')", js:() => fmtD(randDate(-3650, 0)) },
+  birthDate: { label:'Data de naixement', grp:'Dates', faker:() => "$faker->dateTimeBetween('-80 years', '-18 years')->format('Y-m-d')", js:() => fmtD(randDate(-80*365, -18*365)) },
+  time:      { label:'Hora', grp:'Dates', faker:() => "$faker->time('H:i:s')", js:() => `${pad(ri(0,23))}:${pad(ri(0,59))}:${pad(ri(0,59))}` },
+  year:      { label:'Any', grp:'Dates', faker:() => `(int) $faker->year()`, js:() => ri(1990, new Date().getFullYear()) },
+  json:      { label:'JSON d\'exemple', grp:'Altres', faker:() => "json_encode(['key' => $faker->word(), 'value' => $faker->numberBetween(1, 100)])", js:() => JSON.stringify({ key:pick(P.words), value:ri(1,100) }) },
+};
+
+function fkFor(fieldName) { return state.create.fks.find(fk => fk.column === fieldName && fk.refTable); }
+
+function detectGen(f) {
+  const n = f.name.toLowerCase(), t = f.type, tm = T(f);
+  if (f.ai) return 'skip';
+  if (fkFor(f.name)) return 'fk';
+  if (n === 'deleted_at') return 'null';
+  if (n === 'created_at') return 'dateTimePast';
+  if (n === 'updated_at') return 'now';
+  if (t === 'ENUM') return 'enum';
+  if (t === 'SET') return 'set';
+  if (t === 'BOOLEAN' || /^(is|has|can|should)_/.test(n) || (t === 'TINYINT' && /(active|enabled|visible|published|verified)/.test(n))) return 'boolean';
+  if (t === 'JSON') return 'json';
+  if (/(^|_)(uuid|guid)$/.test(n)) return 'uuid';
+  if (/(email|correu|mail)/.test(n)) return 'email';
+  if (/(password|contrasenya|passwd|^pass$)/.test(n)) return 'password';
+  if (/(username|user_name|^login$|nickname|^usuari$)/.test(n)) return 'userName';
+  if (/(first_?name|firstname|^nom$|^nombre$)/.test(n)) return 'firstName';
+  if (/(last_?name|surname|cognom|apellido)/.test(n)) return 'lastName';
+  if (/^(name|full_?name|nom_complet|author|autor)$/.test(n)) return tm.str ? 'fullName' : 'fullName';
+  if (/(phone|telefon|tel$|mobile|mobil|movil)/.test(n)) return 'phone';
+  if (/(^dni$|^nif$|^nie$)/.test(n)) return 'dni';
+  if (/(job|carrec|position_title|ocupacio)/.test(n)) return 'jobTitle';
+  if (/(address|adreca|direccion|street)/.test(n)) return 'address';
+  if (/(city|ciutat|ciudad|town|poblacio)/.test(n)) return 'city';
+  if (/(zip|postal|postcode|^cp$)/.test(n)) return 'postcode';
+  if (/(country|pais)/.test(n)) return 'country';
+  if (/(^lat$|latitude|latitud)/.test(n)) return 'latitude';
+  if (/(^lng$|^lon$|longitude|longitud)/.test(n)) return 'longitude';
+  if (/(company|empresa)/.test(n)) return 'company';
+  if (/(image|avatar|photo|foto|thumbnail|picture|imatge|logo)/.test(n)) return 'imageUrl';
+  if (/(url|website|web$|link)/.test(n)) return 'url';
+  if (/slug/.test(n)) return 'slug';
+  if (/(token|api_key|secret)/.test(n)) return 'token';
+  if (/(^ip$|ip_address)/.test(n)) return 'ipv4';
+  if (/user_agent/.test(n)) return 'userAgent';
+  if (/(colou?r)/.test(n)) return 'color';
+  if (/(sku|code|codi|reference|^ref$|order_number|number$)/.test(n) && tm.str) return 'code';
+  if (/(birth|naixement|nacimiento)/.test(n) && tm.dt) return 'birthDate';
+  if (/(title|titol|titulo|subject|assumpte|^name$|_name$|label)/.test(n) && tm.str) return 'title';
+  if (/(price|amount|total|cost|preu|import|salary|balance|subtotal|tax)/.test(n)) return tm.num === 'int' ? 'intRange' : 'decimal';
+  if (tm.num === 'int') return 'intRange';
+  if (tm.num === 'dec') return 'decimal';
+  if (t === 'DATE') return 'date';
+  if (t === 'DATETIME' || t === 'TIMESTAMP') return /(expire|due|until|ends?_at|start)/.test(n) ? 'dateTimeFuture' : 'dateTimePast';
+  if (t === 'TIME') return 'time';
+  if (t === 'YEAR') return 'year';
+  if (t === 'BLOB' || t === 'LONGBLOB') return f.nullable ? 'null' : 'skip';
+  if (/(description|descripcio|content|contingut|body|bio|summary|resum|notes|comment|excerpt|message)/.test(n)) return (t === 'VARCHAR' || t === 'CHAR') ? 'sentence' : 'paragraphs';
+  if (t === 'TEXT' || t === 'MEDIUMTEXT' || t === 'LONGTEXT') return 'paragraph';
+  if (t === 'CHAR' || t === 'VARCHAR') { const l = +f.length || 255; return l <= 20 ? 'word' : l <= 80 ? 'title' : 'sentence'; }
+  return 'word';
+}
+
+function genCfg(f) {
+  const g = state.seeder.gens[f.id] ||= { gen:'auto', min:'', max:'', custom:'' };
+  const key = g.gen === 'auto' ? detectGen(f) : g.gen;
+  return { g, key };
+}
+
+function seederFields() { return state.create.fields.filter(f => f.name.trim()); }
+
+function fkVar(table) { return '$' + camel(table) + 'Ids'; }
+
+function genSeeder() {
+  const s = state.seeder, tbl = state.create.table.trim() || 'nova_taula';
+  const ns = state.settings.seederNs.trim() || 'App\\Database\\Seeds';
+  const cls = seederClass();
+  const count = Math.max(1, Math.min(+s.count || 10, s.mode === 'static' ? 500 : 100000));
+  const fields = seederFields();
+  const lines = [];
+  const uses = ['CodeIgniter\\Database\\Seeder'];
+
+  if (s.mode === 'faker') {
+    uses.push('Faker\\Factory');
+    const ctx = { pre:new Set() };
+    const fkLines = [], rowLines = [];
+    const fkTables = new Map();
+    for (const f of fields) {
+      const { g, key } = genCfg(f);
+      if (key === 'skip') continue;
+      let expr;
+      if (key === 'fk') {
+        const fk = fkFor(f.name);
+        if (!fk) { expr = 'null'; }
+        else if (fk.refTable.trim() === tbl) { expr = f.nullable ? 'null' : '1'; }
+        else {
+          const v = fkVar(fk.refTable.trim());
+          if (!fkTables.has(v)) fkTables.set(v, { fk, required: !f.nullable });
+          else if (!f.nullable) fkTables.get(v).required = true;
+          expr = f.nullable ? `${v} === [] ? null : $faker->randomElement(${v})` : `$faker->randomElement(${v})`;
+        }
+      } else {
+        const gen = GENS[key] || GENS.word;
+        expr = gen.faker(f, ctx, g);
+        const unique = (f.key === 'unique' || f.key === 'primary') && expr.startsWith('$faker->') && key !== 'custom';
+        if (unique) expr = expr.replace(/^\$faker->/, '$faker->unique()->');
+        const len = +f.length;
+        if ((f.type === 'VARCHAR' || f.type === 'CHAR') && len && gen.max && gen.max > len && key !== 'custom') expr = `mb_substr(${expr}, 0, ${len})`;
+        if (s.nulls && f.nullable && !['null','now','custom'].includes(key) && f.key !== 'unique' && !/^(created|updated)_at$/.test(f.name)) expr = `$faker->boolean(15) ? null : ${expr}`;
+      }
+      rowLines.push([f.name.trim(), expr]);
+    }
+    for (const [v, { fk, required }] of fkTables) {
+      fkLines.push(`// IDs existents de '${fk.refTable.trim()}' (executa abans el seu seeder)`);
+      fkLines.push(`${v} = array_column($this->db->table(${q(fk.refTable.trim())})->select(${q((fk.refColumn||'id').trim())})->get()->getResultArray(), ${q((fk.refColumn||'id').trim())});`);
+      if (required) {
+        fkLines.push(`if (${v} === []) {`, `    throw new \\RuntimeException(${q(`La taula '${fk.refTable.trim()}' és buida: executa primer el seu seeder.`)});`, '}');
+      }
+      fkLines.push('');
+    }
+    lines.push(`$faker = Factory::create(${q(s.locale || 'es_ES')});`);
+    if (String(s.seed).trim() !== '' && /^\d+$/.test(String(s.seed).trim())) lines.push(`$faker->seed(${String(s.seed).trim()});`);
+    ctx.pre.forEach(p => lines.push(p));
+    lines.push('');
+    lines.push(...fkLines);
+    lines.push('$data = [];', '', `for ($i = 0; $i < ${count}; $i++) {`, '    $data[] = [');
+    if (rowLines.length) lines.push(phpAssoc(rowLines, '        '));
+    lines.push('    ];', '}');
+  } else {
+    R = rng(s.jsSeed || 1);
+    const rows = [];
+    const seen = {};
+    for (let i = 1; i <= count; i++) {
+      const row = [];
+      for (const f of fields) {
+        const { g, key } = genCfg(f);
+        if (key === 'skip') continue;
+        let val;
+        if (key === 'fk') {
+          const fk = fkFor(f.name);
+          val = (!fk || fk.refTable.trim() === tbl) ? (f.nullable ? null : 1) : ri(1, Math.max(1, +s.fkMax || 10));
+        } else {
+          const gen = GENS[key] || GENS.word;
+          val = gen.js ? gen.js(f, i, g) : null;
+          if (typeof val === 'string') {
+            const len = +f.length;
+            if ((f.type === 'VARCHAR' || f.type === 'CHAR') && len && val.length > len) val = val.slice(0, len);
+            if (f.key === 'unique' || f.key === 'primary') {
+              const set = seen[f.id] ||= new Set();
+              let tries = 0; while (set.has(val) && tries++ < 20) { val = gen.js(f, i, g); if (len && val.length > len) val = val.slice(0, len); }
+              if (set.has(val)) { const sfx = '-' + i; val = (len ? val.slice(0, Math.max(0, len - sfx.length)) : val) + sfx; }
+              set.add(val);
+            }
+          }
+          if (s.nulls && f.nullable && val !== null && !['null','now','custom'].includes(key) && f.key !== 'unique' && !/^(created|updated)_at$/.test(f.name) && R() < .15) val = null;
+        }
+        row.push([f.name.trim(), phpLit(val)]);
+      }
+      rows.push(row);
+    }
+    lines.push('$data = [');
+    rows.forEach(r => { lines.push('    [', r.length ? phpAssoc(r, '        ') : '', '    ],'); });
+    lines.push('];');
+    if (fields.some(f => genCfg(f).key === 'fk')) lines.splice(0, 0, `// Les claus foranes usen IDs entre 1 i ${+s.fkMax || 10}: assegura't que existeixen.`);
+  }
+
+  lines.push('');
+  if (s.truncate) {
+    lines.push('// Buida la taula abans d\'inserir (desactiva temporalment les FK)', '$this->db->disableForeignKeyChecks();', `$this->db->table(${q(tbl)})->truncate();`, '$this->db->enableForeignKeyChecks();', '');
+  }
+  const chunk = Math.max(1, +s.chunk || 100);
+  if (count > chunk) {
+    lines.push(`foreach (array_chunk($data, ${chunk}) as $chunk) {`, `    $this->db->table(${q(tbl)})->insertBatch($chunk);`, '}');
+  } else {
+    lines.push(`$this->db->table(${q(tbl)})->insertBatch($data);`);
+  }
+
+  return ['<?php', '', `namespace ${ns};`, '', ...uses.sort().map(u => `use ${u};`), '', `class ${cls} extends Seeder`, '{', '    public function run()', '    {',
+    lines.map(l => l === '' ? '' : l.split('\n').map(x => x === '' ? '' : '        ' + x).join('\n')).join('\n'),
+    '    }', '}', ''].join('\n');
+}
+
+function phpLit(v) {
+  if (v === null || v === undefined) return 'null';
+  if (typeof v === 'object' && v.raw) return v.raw;
+  if (typeof v === 'number') return String(v);
+  return q(v);
+}
+
+function previewValue(f) {
+  const { g, key } = genCfg(f);
+  if (key === 'skip') return '—';
+  if (key === 'fk') { const fk = fkFor(f.name); return fk ? `→ ${fk.refTable}.${fk.refColumn||'id'}` : 'null'; }
+  const gen = GENS[key]; if (!gen || !gen.js) return '';
+  R = rng((state.seeder.jsSeed || 1) + f.name.length * 7919);
+  const v = gen.js(f, 1, g);
+  if (v && typeof v === 'object') return v.raw;
+  return v === null ? 'NULL' : String(v);
+}
+
+/* =========================================================================
+   VALIDATION
+   ========================================================================= */
+function validate() {
+  const out = [];
+  const E = (m) => out.push(['err', m]), W = (m) => out.push(['warn', m]), I = (m) => out.push(['info', m]);
+  const s = state.settings;
+  if (!s.autoClass && s.className.trim() && !/^[A-Z][A-Za-z0-9_]*$/.test(s.className.trim())) E(`El nom de classe <code>${esc(s.className)}</code> no és vàlid (PascalCase, sense espais).`);
+
+  const checkField = (f, where) => {
+    const t = T(f), n = f.name.trim();
+    if (!n) { E(`${where}: hi ha una columna sense nom.`); return; }
+    if (!isIdent(n)) W(`${where}: <code>${esc(n)}</code> conté caràcters no recomanats (usa lletres, números i _).`);
+    if (t.len === 'req' && !String(f.length).trim()) E(`${where}: <code>${esc(n)}</code> (${f.type}) necessita una longitud.`);
+    if (t.len === 'vals' && !splitList(f.length).length) E(`${where}: <code>${esc(n)}</code> (${f.type}) necessita una llista de valors.`);
+    if (t.len === 'prec' && String(f.length).trim() && !/^\d+\s*(,\s*\d+)?$/.test(String(f.length).trim())) E(`${where}: <code>${esc(n)}</code> té una precisió no vàlida (ex: 10,2).`);
+    if (t.nodef && String(f.def).trim() && !/^null$/i.test(String(f.def).trim())) W(`${where}: MySQL no permet valor per defecte en columnes ${f.type} (<code>${esc(n)}</code>).`);
+    if (/^current_timestamp/i.test(String(f.def).trim()) && !t.ts) E(`${where}: CURRENT_TIMESTAMP només és vàlid en DATETIME o TIMESTAMP (<code>${esc(n)}</code>).`);
+    if (/^null$/i.test(String(f.def).trim()) && !f.nullable) W(`${where}: <code>${esc(n)}</code> té default NULL però no és Nullable (CI4 la farà nullable).`);
+    if (f.ai && !t.ai) E(`${where}: Auto increment només s'aplica a tipus enters (<code>${esc(n)}</code>).`);
+    if (t.len === 'vals' && String(f.def).trim() && !/^null$/i.test(String(f.def).trim()) && !splitList(f.length).includes(String(f.def).trim().replace(/^'(.*)'$/,'$1'))) E(`${where}: el valor per defecte de <code>${esc(n)}</code> no és a la llista.`);
+  };
+
+  if (state.mode === 'create') {
+    const c = state.create;
+    if (!c.table.trim()) E('Cal indicar el nom de la taula.');
+    else if (!isIdent(c.table.trim())) W('El nom de la taula conté caràcters no recomanats.');
+    if (!c.fields.length) E('La taula no té cap columna.');
+    const names = {};
+    c.fields.forEach(f => { checkField(f, 'Columnes'); const n = f.name.trim(); if (n) { if (names[n]) E(`Columna duplicada: <code>${esc(n)}</code>.`); names[n] = f; } });
+    const pks = c.fields.filter(f => f.key === 'primary');
+    if (c.fields.length && !pks.length) W('La taula no té clau primària.');
+    c.fields.filter(f => f.ai).forEach(f => { if (f.key !== 'primary') E(`<code>${esc(f.name)}</code> és auto increment però no és clau primària.`); });
+    if (c.fields.filter(f => f.ai).length > 1) E('Només hi pot haver una columna auto increment.');
+    pks.forEach(f => { if (f.nullable) E(`La clau primària <code>${esc(f.name)}</code> no pot ser Nullable.`); });
+    c.fks.forEach(fk => {
+      const f = names[fk.column];
+      if (!fk.column) { E('Clau forana sense columna local.'); return; }
+      if (!f) { E(`Clau forana: la columna <code>${esc(fk.column)}</code> no existeix.`); return; }
+      if (!fk.refTable.trim()) E(`Clau forana <code>${esc(fk.column)}</code>: falta la taula referenciada.`);
+      if ((fk.onDelete === 'SET NULL' || fk.onUpdate === 'SET NULL') && !f.nullable) E(`Clau forana <code>${esc(fk.column)}</code>: SET NULL requereix que la columna sigui Nullable.`);
+      if (T(f).num === 'int' && !f.unsigned) W(`Clau forana <code>${esc(fk.column)}</code>: el tipus ha de coincidir exactament amb la columna referenciada (normalment INT UNSIGNED).`);
+    });
+    (c.indexes||[]).forEach(ix => { splitList(ix.columns).forEach(col => { if (!names[col]) E(`Índex: la columna <code>${esc(col)}</code> no existeix.`); }); });
+    if (c.fks.length && c.engine && c.engine !== 'InnoDB') W('Les claus foranes només funcionen amb InnoDB.');
+  } else {
+    const u = state.update;
+    if (!u.table.trim()) E('Cal indicar la taula a modificar.');
+    if (!u.ops.length) I('Encara no hi ha cap operació. Afegeix-ne des del panell <b>Operacions</b>.');
+    u.ops.forEach((op, i) => {
+      const where = `Operació ${i+1} (${OP_META[op.kind].label})`;
+      switch (op.kind) {
+        case 'addColumn': checkField(op.field, where); if (op.field.ai) W(`${where}: afegir una columna auto increment a una taula existent sol requerir que sigui clau primària.`);
+          if (!op.field.nullable && !String(op.field.def).trim()) I(`${where}: <code>${esc(op.field.name)}</code> és NOT NULL sense default: a MySQL les files existents rebran el valor implícit (0, '' …).`); break;
+        case 'dropColumn': if (!op.field.name.trim()) E(`${where}: indica la columna a eliminar.`); else checkField(op.field, where + ' · definició per al down()'); break;
+        case 'modifyColumn': if (!(op.column||'').trim()) E(`${where}: indica la columna actual.`); checkField(op.to, where + ' · nova definició'); checkField({ ...op.from, name: op.from.name || op.column }, where + ' · definició original'); break;
+        case 'addIndex': case 'dropIndex': if (!splitList(op.columns).length) E(`${where}: indica com a mínim una columna.`); break;
+        case 'addForeignKey': case 'dropForeignKey':
+          if (!(op.column||'').trim() || !(op.refTable||'').trim()) E(`${where}: indica la columna i la taula referenciada.`);
+          if (op.kind === 'dropForeignKey' && !(op.name||'').trim()) I(`${where}: s'usarà el nom per defecte de CI4 <code>${esc(fkName(u.table.trim(), [op.column||'col'], state.settings.dbPrefix))}</code>. Si la FK es va crear amb un altre nom, indica'l.`);
+          break;
+        case 'renameTable': if (!(op.newName||'').trim()) E(`${where}: indica el nou nom.`); break;
+        case 'rawSql': if (!splitSql(op.up).length) E(`${where}: falta el SQL de l'up().`); if (!splitSql(op.down).length) W(`${where}: sense SQL de reversió, el rollback no desfarà aquest canvi.`); break;
+      }
+    });
+  }
+  return out;
+}
+
+/* =========================================================================
+   EDITOR RENDERING
+   ========================================================================= */
+function typeSelect(bind, value) {
+  return `<select class="sel mono" data-bind="${bind}" data-rerender aria-label="Tipus">` +
+    Object.entries(TYPE_OPTIONS).map(([g, arr]) => `<optgroup label="${g}">${arr.map(t => `<option ${t === value ? 'selected' : ''}>${t}</option>`).join('')}</optgroup>`).join('') +
+    `</select>`;
+}
+
+function chip(bind, checked, label, disabled = false, rerender = true) {
+  return `<label class="chip ${disabled ? 'dis' : ''}"><input type="checkbox" data-bind="${bind}" ${checked ? 'checked' : ''} ${rerender ? 'data-rerender' : ''}>${label}</label>`;
+}
+
+/** Field editor. opts: {order, idx, total, keySel, actions, after, afterBind, firstBind} */
+function fieldEditor(f, base, opts = {}) {
+  const t = T(f);
+  const lenPh = t.len === 'vals' ? (t.ph || 'a, b') : t.ph || (t.len === 'opt' ? 'opcional' : '—');
+  const keyCls = f.key !== 'none' ? 'k-' + f.key : '';
+  const mainCls = opts.order ? (opts.keySel ? '' : 'nokey') : 'noorder';
+  return `<div class="frow">
+    <div class="frow-main ${mainCls}">
+      ${opts.order ? `<div class="ord"><button data-action="move-field" data-id="${f.id}" data-dir="-1" title="Pujar">${ic('up','sm')}</button><span>${opts.idx + 1}</span><button data-action="move-field" data-id="${f.id}" data-dir="1" title="Baixar">${ic('down','sm')}</button></div>` : ''}
+      <input class="inp mono" data-bind="${base}.name" data-rerender value="${esc(f.name)}" placeholder="${opts.namePh || 'nom_columna'}" aria-label="Nom" spellcheck="false" ${opts.nameList ? `list="${opts.nameList}"` : ''}>
+      ${typeSelect(base + '.type', f.type)}
+      <input class="inp mono" data-bind="${base}.length" value="${esc(f.length)}" placeholder="${esc(lenPh)}" ${t.len ? '' : 'disabled'} title="${t.len === 'vals' ? 'Valors separats per comes' : 'Longitud / precisió'}" aria-label="Longitud" spellcheck="false">
+      ${opts.keySel ? `<select class="sel ${keyCls}" data-bind="${base}.key" data-rerender aria-label="Clau">
+        <option value="none" ${f.key==='none'?'selected':''}>Sense índex</option>
+        ${opts.noPrimary ? '' : `<option value="primary" ${f.key==='primary'?'selected':''}>Clau primària</option>`}
+        <option value="unique" ${f.key==='unique'?'selected':''}>Únic</option>
+        <option value="index" ${f.key==='index'?'selected':''}>Índex</option>
+      </select>` : ''}
+      ${opts.actions ? `<div class="acts">
+        <button class="btn icon ghost" data-action="dup-field" data-id="${f.id}" title="Duplicar">${ic('copy','sm')}</button>
+        <button class="btn icon ghost danger" data-action="del-field" data-id="${f.id}" title="Eliminar">${ic('trash','sm')}</button>
+      </div>` : ''}
+    </div>
+    <div class="frow-flags">
+      ${chip(base + '.unsigned', f.unsigned && t.uns, 'UNSIGNED', !t.uns)}
+      ${chip(base + '.nullable', f.nullable, 'NULL')}
+      ${opts.noAi ? '' : chip(base + '.ai', f.ai && t.ai, 'AUTO_INCREMENT', !t.ai)}
+      <span class="mini">Default <input class="inp mono" style="width:150px" data-bind="${base}.def" value="${esc(f.def)}" list="dl-default" placeholder="${f.ai ? '—' : 'cap'}" ${t.nodef || f.ai ? 'disabled' : ''} spellcheck="false"></span>
+      <span class="mini">Comentari <input class="inp" style="width:150px" data-bind="${base}.comment" value="${esc(f.comment)}" placeholder="opcional"></span>
+      ${opts.afterBind ? `<span class="mini">Després de <input class="inp mono" style="width:120px" data-bind="${opts.afterBind}" value="${esc(opts.after || '')}" placeholder="(al final)" list="dl-known" spellcheck="false"></span>` : ''}
+      ${opts.firstBind ? chip(opts.firstBind, opts.first, 'FIRST') : ''}
+    </div>
+  </div>`;
+}
+
+function knownColumns() {
+  if (state.update.table.trim() && state.update.table.trim() === state.create.table.trim()) return state.create.fields.filter(f => f.name.trim());
+  return [];
+}
+
+function renderEditor() {
+  const el = document.getElementById('editor');
+  const s = state, set = s.settings;
+  const isC = s.mode === 'create';
+  const issues = validate();
+  const nErr = issues.filter(i => i[0] === 'err').length;
+
+  let html = `
+  <div class="seg big">
+    <button data-action="mode" data-v="create" class="${isC ? 'on' : ''}">${ic('table')} Crear taula <span class="sub">createTable</span></button>
+    <button data-action="mode" data-v="update" class="${!isC ? 'on' : ''}">${ic('edit')} Modificar taula <span class="sub">alter</span></button>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>${ic('sliders')} General</h2></div>
+    <div class="card-b grid" style="gap:14px">
+      <div class="grid g2">
+        <div>
+          <label class="lbl">${isC ? 'Nom de la taula' : 'Taula a modificar'}</label>
+          <input class="inp mono" data-bind="${isC ? 'create.table' : 'update.table'}" data-rerender value="${esc(isC ? s.create.table : s.update.table)}" placeholder="ex: users" spellcheck="false" ${!isC ? 'list="dl-tables"' : ''}>
+          ${!isC && knownColumns().length ? `<div class="hint">${ic('check','sm')} Columnes conegudes de <code>${esc(s.create.table)}</code> (pestanya Crear) disponibles per autocompletar.</div>` : ''}
+        </div>
+        <div>
+          <label class="lbl" style="display:flex;justify-content:space-between">Classe de la migració <label class="sw" style="font-weight:500"><input type="checkbox" data-bind="settings.autoClass" data-rerender ${set.autoClass ? 'checked' : ''}>Automàtic</label></label>
+          <input class="inp mono" id="classInput" data-bind="settings.className" value="${esc(set.autoClass ? autoClassName() : set.className)}" ${set.autoClass ? 'disabled' : ''} spellcheck="false">
+        </div>
+      </div>
+      <details class="adv">
+        <summary>Opcions avançades (namespaces, prefix, grup BD)</summary>
+        <div class="grid g2">
+          <div><label class="lbl">Namespace migració</label><input class="inp mono" data-bind="settings.migrationNs" value="${esc(set.migrationNs)}" spellcheck="false"></div>
+          <div><label class="lbl">Namespace seeder</label><input class="inp mono" data-bind="settings.seederNs" value="${esc(set.seederNs)}" spellcheck="false"></div>
+          <div><label class="lbl">DBPrefix (app/Config/Database.php)</label><input class="inp mono" data-bind="settings.dbPrefix" value="${esc(set.dbPrefix)}" placeholder="buit" spellcheck="false"><div class="hint">Només s'usa per calcular el nom de les FK creades amb createTable().</div></div>
+          <div><label class="lbl">$DBGroup (opcional)</label><input class="inp mono" data-bind="settings.dbGroup" value="${esc(set.dbGroup)}" placeholder="default" spellcheck="false"></div>
+        </div>
+      </details>
+    </div>
+  </div>`;
+
+  if (isC) html += renderCreateCard(); else html += renderUpdateCard();
+  el.innerHTML = html;
+
+  // datalists for autocompletion
+  const known = (isC ? s.create.fields : knownColumns()).map(f => f.name).filter(Boolean);
+  let dl = document.getElementById('dl-known');
+  if (!dl) { dl = document.createElement('datalist'); dl.id = 'dl-known'; document.body.appendChild(dl); }
+  dl.innerHTML = known.map(n => `<option value="${esc(n)}">`).join('');
+  let dt = document.getElementById('dl-tables');
+  if (!dt) { dt = document.createElement('datalist'); dt.id = 'dl-tables'; document.body.appendChild(dt); }
+  dt.innerHTML = [s.create.table, ...s.create.fks.map(f => f.refTable)].filter(Boolean).filter((v,i,a) => a.indexOf(v) === i).map(n => `<option value="${esc(n)}">`).join('');
+}
+
+function tabBtn(id, icon, label, badge) {
+  return `<button data-action="tab" data-v="${id}" class="${ui.tab === id ? 'on' : ''}">${ic(icon)} ${label}${badge != null ? ` <span class="badge">${badge}</span>` : ''}</button>`;
+}
+
+function renderCreateCard() {
+  const c = state.create;
+  if (!['fields','keys','options','seeder'].includes(ui.tab)) ui.tab = 'fields';
+  let body = '';
+  if (ui.tab === 'fields') {
+    body = `<div class="quick" style="margin-bottom:12px">
+        <span class="lbl2">Afegir ràpid:</span>
+        <button class="btn sm" data-action="quick" data-v="id">${ic('key','sm')} id</button>
+        <button class="btn sm" data-action="quick" data-v="timestamps">${ic('clock','sm')} created_at / updated_at</button>
+        <button class="btn sm" data-action="quick" data-v="soft">${ic('trash2','sm')} deleted_at</button>
+        <button class="btn sm" data-action="quick" data-v="fk">${ic('link','sm')} columna FK</button>
+        <button class="btn sm primary" data-action="add-field" style="margin-left:auto">${ic('plus','sm')} Nova columna</button>
+      </div>`;
+    body += c.fields.length ? `<div class="list">${c.fields.map((f, i) => fieldEditor(f, `create.fields#${f.id}`, { order:true, idx:i, keySel:true, actions:true })).join('')}</div>`
+      : `<div class="empty">${ic('cols')}<h3>Aquesta taula encara no té columnes</h3><p>Comença amb una clau primària i els timestamps, o crea una columna des de zero.</p>
+          <div class="quick"><button class="btn sm" data-action="quick" data-v="id">${ic('key','sm')} id</button><button class="btn sm" data-action="quick" data-v="timestamps">${ic('clock','sm')} timestamps</button><button class="btn sm primary" data-action="add-field">${ic('plus','sm')} Nova columna</button></div></div>`;
+  } else if (ui.tab === 'keys') {
+    const cols = c.fields.map(f => f.name).filter(Boolean);
+    body = `<div class="sub-h">Claus foranes</div>
+      <div class="list" style="margin:10px 0 18px">
+      ${c.fks.length ? c.fks.map(fk => fkEditor(fk, `create.fks#${fk.id}`, cols, 'del-fk')).join('') : `<div class="empty" style="padding:18px">${ic('link')}<p style="margin:6px 0 10px">Cap clau forana definida.</p></div>`}
+      </div>
+      <button class="btn sm" data-action="add-fk">${ic('plus','sm')} Afegir clau forana</button>
+      <div class="sub-h" style="margin-top:22px">Índexs compostos</div>
+      <p class="hint" style="margin:6px 0 10px">Els índexs d'una sola columna es defineixen a la pestanya Columnes. Aquí pots crear índexs de diverses columnes.</p>
+      <div class="list" style="margin-bottom:12px">
+      ${(c.indexes||[]).map(ix => `<div class="frow"><div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto auto;gap:8px;align-items:center">
+          <input class="inp mono" data-bind="create.indexes#${ix.id}.columns" value="${esc(ix.columns)}" placeholder="col_a, col_b" spellcheck="false">
+          <input class="inp mono" data-bind="create.indexes#${ix.id}.name" value="${esc(ix.name)}" placeholder="nom (opcional)" spellcheck="false">
+          ${chip(`create.indexes#${ix.id}.unique`, ix.unique, 'ÚNIC')}
+          <button class="btn icon ghost danger" data-action="del-index" data-id="${ix.id}">${ic('trash','sm')}</button>
+        </div></div>`).join('')}
+      </div>
+      <button class="btn sm" data-action="add-index">${ic('plus','sm')} Afegir índex compost</button>`;
+  } else if (ui.tab === 'options') {
+    body = `<div class="grid" style="gap:16px">
+      <label class="sw"><input type="checkbox" data-bind="create.ifNotExists" ${c.ifNotExists ? 'checked' : ''}> <span><b>IF NOT EXISTS</b> a <code>createTable()</code> <span class="hint" style="display:block;margin:0">Si la taula ja existeix, no fa res (cap error). Útil però pot amagar errors.</span></span></label>
+      <label class="sw"><input type="checkbox" data-bind="create.ifExists" ${c.ifExists ? 'checked' : ''}> <span><b>IF EXISTS</b> a <code>dropTable()</code> <span class="hint" style="display:block;margin:0">Evita errors al fer rollback si la taula ja no existeix.</span></span></label>
+      <div class="grid g2">
+        <div><label class="lbl">Motor (MySQL)</label><select class="sel" data-bind="create.engine"><option value="" ${!c.engine?'selected':''}>Per defecte del servidor</option><option ${c.engine==='InnoDB'?'selected':''}>InnoDB</option><option ${c.engine==='MyISAM'?'selected':''}>MyISAM</option></select></div>
+        <div><label class="lbl">Comentari de la taula (MySQL)</label><input class="inp" data-bind="create.comment" value="${esc(c.comment)}" placeholder="opcional"></div>
+      </div>
+    </div>`;
+  } else body = renderSeederBody();
+
+  return `<div class="card">
+    <div class="tabs">
+      ${tabBtn('fields','cols','Columnes', c.fields.length)}
+      ${tabBtn('keys','link','Claus i índexs', c.fks.length + (c.indexes||[]).length)}
+      ${tabBtn('options','sliders','Opcions')}
+      ${tabBtn('seeder','db','Seeder')}
+    </div>
+    <div class="card-b">${body}</div>
+  </div>`;
+}
+
+function fkEditor(fk, base, cols, delAction) {
+  return `<div class="frow"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:end">
+    <div><label class="lbl">Columna local</label>${cols ? `<select class="sel mono" data-bind="${base}.column" data-rerender><option value="">—</option>${cols.map(n => `<option ${n === fk.column ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>` : `<input class="inp mono" data-bind="${base}.column" data-rerender value="${esc(fk.column)}" list="dl-known" placeholder="user_id" spellcheck="false">`}</div>
+    <div><label class="lbl">Taula referenciada</label><input class="inp mono" data-bind="${base}.refTable" data-rerender value="${esc(fk.refTable)}" placeholder="users" spellcheck="false"></div>
+    <div><label class="lbl">Columna referenciada</label><input class="inp mono" data-bind="${base}.refColumn" value="${esc(fk.refColumn)}" placeholder="id" spellcheck="false"></div>
+    <div><label class="lbl">ON UPDATE</label><select class="sel" data-bind="${base}.onUpdate">${FK_ACTIONS.map(a => `<option ${a === fk.onUpdate ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+    <div><label class="lbl">ON DELETE</label><select class="sel" data-bind="${base}.onDelete">${FK_ACTIONS.map(a => `<option ${a === fk.onDelete ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+    ${delAction ? `<div style="display:flex;justify-content:flex-end"><button class="btn icon ghost danger" data-action="${delAction}" data-id="${fk.id}" title="Eliminar">${ic('trash','sm')}</button></div>` : ''}
+  </div></div>`;
+}
+
+function opSummary(op) {
+  switch (op.kind) {
+    case 'addColumn': return `${op.field.name || '?'} ${op.field.type}${op.field.length ? '(' + op.field.length + ')' : ''}`;
+    case 'dropColumn': return op.field.name || '?';
+    case 'modifyColumn': return `${op.column || '?'}${op.to.name && op.to.name !== op.column ? ' → ' + op.to.name : ''} ${op.to.type}`;
+    case 'addIndex': case 'dropIndex': return `(${op.columns || '?'})${op.unique ? ' UNIQUE' : ''}`;
+    case 'addForeignKey': case 'dropForeignKey': return `${op.column || '?'} → ${op.refTable || '?'}.${op.refColumn || 'id'}`;
+    case 'renameTable': return `${state.update.table} → ${op.newName || '?'}`;
+    case 'rawSql': return (op.up || '').split('\n')[0].slice(0, 60);
+  }
+  return '';
+}
+
+function renderOp(op, i, n) {
+  const m = OP_META[op.kind], b = `update.ops#${op.id}`;
+  let body = '';
+  const known = knownColumns();
+  switch (op.kind) {
+    case 'addColumn':
+      body = fieldEditor(op.field, b + '.field', { keySel:true, noPrimary:false, afterBind: b + '.after', after: op.after, firstBind: b + '.first', first: op.first });
+      break;
+    case 'dropColumn':
+      body = `<p class="hint" style="margin:0">Indica la definició actual de la columna: s'usa al <code>down()</code> per tornar-la a crear.${known.length ? ' Tria-la de la llista i s\'omplirà automàticament.' : ''}</p>` +
+        fieldEditor(op.field, b + '.field', { keySel:true, noAi:true, afterBind: b + '.after', after: op.after, namePh:'columna_a_eliminar', nameList:'dl-known' });
+      break;
+    case 'modifyColumn':
+      body = `<div class="grid g2"><div><label class="lbl">Columna actual</label><input class="inp mono" data-bind="${b}.column" data-rerender value="${esc(op.column)}" list="dl-known" placeholder="nom_actual" spellcheck="false"></div>
+        <div class="hint" style="align-self:end">Per renombrar, canvia el nom a la nova definició. CI4 genera <code>CHANGE</code> / <code>MODIFY</code>.</div></div>
+        <div class="sub-h">Nova definició (up)</div>
+        ${fieldEditor(op.to, b + '.to', { namePh: op.column || 'nou_nom' })}
+        <div class="sub-h">Definició original (down)</div>
+        ${fieldEditor(op.from, b + '.from', { namePh: op.column || 'nom_actual' })}`;
+      break;
+    case 'addIndex': case 'dropIndex':
+      body = `<div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) auto;gap:8px;align-items:end">
+        <div><label class="lbl">Columnes (separades per comes)</label><input class="inp mono" data-bind="${b}.columns" value="${esc(op.columns)}" list="dl-known" placeholder="email" spellcheck="false"></div>
+        <div><label class="lbl">Nom de l'índex (opcional)</label><input class="inp mono" data-bind="${b}.name" value="${esc(op.name)}" placeholder="${esc(idxName(state.update.table || 'taula', splitList(op.columns).length ? splitList(op.columns) : ['col']))}" spellcheck="false"></div>
+        <div style="padding-bottom:4px">${chip(b + '.unique', op.unique, 'ÚNIC', false, false)}</div>
+      </div>`;
+      break;
+    case 'addForeignKey': case 'dropForeignKey':
+      body = fkEditor(op, b, null, null) + `<div class="grid g2"><div><label class="lbl">Nom de la restricció (opcional)</label><input class="inp mono" data-bind="${b}.name" value="${esc(op.name)}" placeholder="${esc(op.kind === 'addForeignKey' ? fkName(state.update.table || 'taula', [op.column || 'col']) : fkName(state.update.table || 'taula', [op.column || 'col'], state.settings.dbPrefix))}" spellcheck="false"></div>
+        <div class="hint" style="align-self:end">${op.kind === 'dropForeignKey' ? 'Les dades de referència s\'usen al down() per tornar a crear la FK.' : 'Assegura\'t que la columna ja existeix (pots afegir-la en una operació anterior).'}</div></div>`;
+      break;
+    case 'renameTable':
+      body = `<div class="grid g2"><div><label class="lbl">Nom actual</label><input class="inp mono" value="${esc(state.update.table)}" disabled></div><div><label class="lbl">Nou nom</label><input class="inp mono" data-bind="${b}.newName" data-rerender value="${esc(op.newName)}" placeholder="nou_nom" spellcheck="false"></div></div>
+        <div class="hint">Les operacions posteriors s'aplicaran sobre el nou nom.</div>`;
+      break;
+    case 'rawSql':
+      body = `<div class="grid g2"><div><label class="lbl">SQL up()</label><textarea class="inp" data-bind="${b}.up" placeholder="UPDATE users SET role = 'user' WHERE role IS NULL;" spellcheck="false">${esc(op.up)}</textarea></div>
+        <div><label class="lbl">SQL down()</label><textarea class="inp" data-bind="${b}.down" placeholder="-- reversió" spellcheck="false">${esc(op.down)}</textarea></div></div>
+        <div class="hint">Separa diverses sentències amb <code>;</code> al final de línia.</div>`;
+      break;
+  }
+  return `<div class="op">
+    <div class="op-h">
+      <div class="op-ic ${m.cls}">${ic(m.ic,'sm')}</div>
+      <div style="min-width:0;flex:1"><div class="op-t">${i+1}. ${m.label}</div><div class="op-s">${esc(opSummary(op))}</div></div>
+      <button class="btn icon ghost" data-action="move-op" data-id="${op.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} title="Pujar">${ic('up','sm')}</button>
+      <button class="btn icon ghost" data-action="move-op" data-id="${op.id}" data-dir="1" ${i === n-1 ? 'disabled' : ''} title="Baixar">${ic('down','sm')}</button>
+      <button class="btn icon ghost danger" data-action="del-op" data-id="${op.id}" title="Eliminar">${ic('trash','sm')}</button>
+    </div>
+    <div class="op-b">${body}</div>
+  </div>`;
+}
+
+function renderUpdateCard() {
+  const u = state.update;
+  if (!['ops','seeder'].includes(ui.tab)) ui.tab = 'ops';
+  let body;
+  if (ui.tab === 'ops') {
+    body = `${u.ops.length ? `<div class="list" style="margin-bottom:16px">${u.ops.map((op, i) => renderOp(op, i, u.ops.length)).join('')}</div>` : ''}
+      <div class="sub-h" style="margin-bottom:10px">Afegir operació</div>
+      <div class="op-menu">${Object.entries(OP_META).map(([k, m]) => `<button data-action="add-op" data-v="${k}"><div class="op-ic ${m.cls}">${ic(m.ic,'sm')}</div><div><b>${m.label}</b><small class="mono">${m.desc}</small></div></button>`).join('')}</div>
+      <p class="hint" style="margin-top:14px">El <code>down()</code> es genera automàticament en ordre invers per poder fer <code>php spark migrate:rollback</code>.</p>`;
+  } else body = renderSeederBody();
+  return `<div class="card">
+    <div class="tabs">${tabBtn('ops','wand','Operacions', u.ops.length)}${tabBtn('seeder','db','Seeder')}</div>
+    <div class="card-b">${body}</div>
+  </div>`;
+}
+
+function renderSeederBody() {
+  const s = state.seeder, fields = seederFields();
+  const genOptions = (sel) => {
+    const groups = {};
+    for (const [k, g] of Object.entries(GENS)) (groups[g.grp] ||= []).push([k, g]);
+    return `<option value="auto" ${sel === 'auto' ? 'selected' : ''}>Automàtic</option>` + Object.entries(groups).map(([gn, arr]) => `<optgroup label="${gn}">${arr.map(([k, g]) => `<option value="${k}" ${sel === k ? 'selected' : ''}>${g.label}</option>`).join('')}</optgroup>`).join('');
+  };
+  return `
+  ${state.mode === 'update' ? `<div class="issue info" style="margin-bottom:14px">${ic('info','sm')}<span>El seeder es basa en l'estructura definida a <b>Crear taula</b> (<code>${esc(state.create.table)}</code>).</span></div>` : ''}
+  <div class="grid g2" style="margin-bottom:14px">
+    <div>
+      <label class="lbl">Tipus de seeder</label>
+      <div class="seg">
+        <button data-action="seed-mode" data-v="faker" class="${s.mode === 'faker' ? 'on' : ''}">Faker <span class="sub">aleatori a cada execució</span></button>
+        <button data-action="seed-mode" data-v="static" class="${s.mode === 'static' ? 'on' : ''}">Dades fixes <span class="sub">sense dependències</span></button>
+      </div>
+    </div>
+    <div class="grid g2">
+      <div><label class="lbl">Registres</label><input class="inp" type="number" min="1" max="${s.mode === 'static' ? 500 : 100000}" data-bind="seeder.count" data-num value="${esc(s.count)}"></div>
+      ${s.mode === 'faker'
+        ? `<div><label class="lbl">Idioma Faker</label><select class="sel" data-bind="seeder.locale">${['es_ES','en_US','en_GB','fr_FR','it_IT','pt_PT','de_DE'].map(l => `<option ${l === s.locale ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
+        : `<div><label class="lbl">IDs FK entre 1 i…</label><input class="inp" type="number" min="1" data-bind="seeder.fkMax" data-num value="${esc(s.fkMax)}"></div>`}
+    </div>
+  </div>
+  <div class="row" style="margin-bottom:16px;gap:18px">
+    <label class="sw"><input type="checkbox" data-bind="seeder.nulls" ${s.nulls ? 'checked' : ''}>~15% de NULL a columnes nullable</label>
+    <label class="sw"><input type="checkbox" data-bind="seeder.truncate" ${s.truncate ? 'checked' : ''}>Buidar la taula abans (truncate)</label>
+    ${s.mode === 'faker' ? `<span class="mini">Llavor <input class="inp" style="width:90px" data-bind="seeder.seed" value="${esc(s.seed)}" placeholder="aleatòria" inputmode="numeric"></span>` : `<button class="btn sm" data-action="reroll">${ic('dice','sm')} Regenerar dades</button>`}
+    <span class="mini">Lots de <input class="inp" type="number" min="1" style="width:80px" data-bind="seeder.chunk" data-num value="${esc(s.chunk)}"></span>
+  </div>
+  ${s.mode === 'faker' ? `<p class="hint" style="margin:-6px 0 14px">Faker (<code>fakerphp/faker</code>) ja ve a <code>require-dev</code> de l'appstarter de CI4. Si no el tens: <code>composer require --dev fakerphp/faker</code>.</p>` : ''}
+  ${fields.length ? `<div class="tscroll"><table class="stbl">
+    <thead><tr><th>Columna</th><th class="hide-sm">Tipus</th><th>Generador</th><th class="hide-sm">Exemple</th></tr></thead>
+    <tbody>${fields.map(f => {
+      const { g, key } = genCfg(f); const gen = GENS[key] || {};
+      const b = `seeder.gens.${f.id}`;
+      return `<tr>
+        <td class="mono" style="font-weight:600">${esc(f.name)}${f.key === 'primary' ? ` <span class="k-primary">${ic('key','sm')}</span>` : ''}</td>
+        <td class="mono hide-sm" style="color:var(--faint)">${f.type}${f.length ? '(' + esc(f.length) + ')' : ''}${f.nullable ? ' ?' : ''}</td>
+        <td><select class="sel" style="min-width:170px" data-bind="${b}.gen" data-rerender>${genOptions(g.gen)}</select>
+          ${g.gen === 'auto' ? `<div class="hint" style="margin-top:3px">→ ${esc((GENS[key]||{}).label || key)}</div>` : ''}
+          ${key === 'custom' ? `<input class="inp mono" style="margin-top:6px" data-bind="${b}.custom" value="${esc(g.custom)}" placeholder="$faker->randomNumber(5)" spellcheck="false">` : ''}
+          ${gen.params === 'range' ? `<div class="mini" style="margin-top:6px">de <input class="inp" style="width:72px" data-bind="${b}.min" value="${esc(g.min)}" placeholder="${(key === 'decimal' ? decBounds(f, null) : intBounds(f, null))[0]}"> a <input class="inp" style="width:72px" data-bind="${b}.max" value="${esc(g.max)}" placeholder="${(key === 'decimal' ? decBounds(f, null) : intBounds(f, null))[1]}"></div>` : ''}
+        </td>
+        <td class="prev hide-sm" title="${esc(previewValue(f))}">${esc(previewValue(f))}</td>
+      </tr>`; }).join('')}
+    </tbody></table></div>` : `<div class="empty">${ic('db')}<p>Defineix primer les columnes de la taula.</p></div>`}`;
+}
+
+/* =========================================================================
+   OUTPUT
+   ========================================================================= */
+let current = { code:'', filename:'', path:'' };
+
+function refresh() {
+  // class name input (auto)
+  const ci = document.getElementById('classInput');
+  if (ci && state.settings.autoClass) ci.value = autoClassName();
+
+  let code = '', filename = '', path = '', lang = 'php';
+  try {
+    if (ui.out === 'migration') {
+      code = state.mode === 'create' ? genCreate() : genUpdate();
+      filename = `${state.settings.timestamp}_${className()}.php`; path = 'app/Database/Migrations/';
+    } else if (ui.out === 'seeder') {
+      code = genSeeder(); filename = `${seederClass()}.php`; path = 'app/Database/Seeds/';
+    } else {
+      code = JSON.stringify(state, null, 2); filename = `kpmigrator-${state.mode === 'create' ? state.create.table : state.update.table}.json`; lang = 'json';
+    }
+  } catch (e) { code = '// Error generant el codi: ' + e.message; console.error(e); }
+  current = { code, filename, path };
+
+  document.querySelectorAll('#outSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === ui.out));
+  document.getElementById('fname').textContent = filename;
+  document.getElementById('fpath').textContent = path;
+
+  const el = document.getElementById('code');
+  let html;
+  if (window.hljs && lang === 'php') { try { html = hljs.highlight(code, { language:'php' }).value; } catch { html = esc(code); } }
+  else if (window.hljs && lang === 'json' && hljs.getLanguage('json')) html = hljs.highlight(code, { language:'json' }).value;
+  else html = esc(code);
+  // line numbers (keeps highlight spans intact by splitting on newlines outside tags – hljs never spans a tag across lines for php)
+  el.innerHTML = splitLinesHtml(html).map((l, i) => `<span class="ln">${i+1}</span>${l}`).join('\n');
+
+  // issues
+  const issues = validate();
+  const box = document.getElementById('issues');
+  const icon = { err:'alert', warn:'alert', info:'info', ok:'check' };
+  const list = issues.length ? issues : [['ok', 'Tot correcte: el codi està llest per copiar a CodeIgniter 4.']];
+  box.innerHTML = list.map(([t, m]) => `<div class="issue ${t}">${ic(icon[t],'sm')}<span>${m}</span></div>`).join('');
+
+  // steps
+  const st = document.getElementById('steps');
+  if (ui.out === 'migration') {
+    st.innerHTML = cmd(`Desa el fitxer a ${path}${filename}`, true) + cmd('php spark migrate') + cmd('php spark migrate:rollback') + cmd('php spark migrate:status');
+  } else if (ui.out === 'seeder') {
+    st.innerHTML = cmd(`Desa el fitxer a ${path}${filename}`, true) + cmd(`php spark db:seed ${seederClass()}`) + `<div class="hint">Per executar-los tots, crida <code>$this->call('${seederClass()}');</code> des de <code>DatabaseSeeder</code>.</div>`;
+  } else {
+    st.innerHTML = `<div class="hint">Desa aquest JSON per tornar a carregar l'esquema més endavant (botó Importar) o comparteix-lo amb l'equip.</div>`;
+  }
+
+  // update tab badges w/o full render
+  save();
+}
+
+function splitLinesHtml(html) {
+  // Close & reopen spans across newlines so each line is self-contained.
+  const out = []; let open = []; let line = '';
+  const re = /(<span[^>]*>)|(<\/span>)|(\n)|([^<\n]+|<)/g; let m;
+  while ((m = re.exec(html))) {
+    if (m[1]) { open.push(m[1]); line += m[1]; }
+    else if (m[2]) { open.pop(); line += m[2]; }
+    else if (m[3]) { line += '</span>'.repeat(open.length); out.push(line); line = open.join(''); }
+    else line += m[4];
+  }
+  out.push(line);
+  return out;
+}
+
+function cmd(text, isComment = false) {
+  return `<div class="cmd"><code>${isComment ? `<span class="c"># ${esc(text)}</span>` : esc(text)}</code>${isComment ? '' : `<button class="btn icon ghost" data-action="copy-text" data-text="${esc(text)}" title="Copiar">${ic('copy','sm')}</button>`}</div>`;
+}
+
+/* =========================================================================
+   RENDER + PERSISTENCE
+   ========================================================================= */
+let renderTimer = null;
+function scheduleRender() { clearTimeout(renderTimer); renderTimer = setTimeout(render, 0); }
+function render() {
+  const ae = document.activeElement;
+  const bind = ae && ae.dataset ? ae.dataset.bind : null;
+  let ss = null, se = null; try { ss = ae.selectionStart; se = ae.selectionEnd; } catch {}
+  renderEditor();
+  refresh();
+  if (bind) {
+    const el = document.querySelector(`[data-bind="${CSS.escape(bind)}"]`);
+    if (el && !el.disabled) { el.focus({ preventScroll:true }); try { if (ss != null) el.setSelectionRange(ss, se); } catch {} }
+  }
+}
+
+const LS_KEY = 'kpmigrator:v3';
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ state, ui })); } catch {} }, 250);
+}
+function normalize(st) {
+  const d = defaultState();
+  const s = Object.assign(d, st || {});
+  s.settings = Object.assign(defaultState().settings, st?.settings || {});
+  s.create = Object.assign(defaultState().create, st?.create || {});
+  s.create.fields = (s.create.fields || []).map(f => Object.assign(F(''), f));
+  s.create.fks = s.create.fks || []; s.create.indexes = s.create.indexes || [];
+  s.update = Object.assign({ table:'', ops:[] }, st?.update || {});
+  s.update.ops = (s.update.ops || []).filter(o => OP_META[o.kind]).map(o => {
+    const b = Object.assign(newOp(o.kind), o);
+    ['field','from','to'].forEach(k => { if (b[k]) b[k] = Object.assign(F(''), b[k]); });
+    return b;
+  });
+  s.seeder = Object.assign(defaultState().seeder, st?.seeder || {});
+  s.seeder.gens = s.seeder.gens || {};
+  return s;
+}
+function loadInitial() {
+  // 1) shared link  2) localStorage
+  const m = location.hash.match(/^#s=([\w\-]+)/);
+  if (m) {
+    try { const st = JSON.parse(b64dec(m[1])); state = normalize(st); ui.tab = state.mode === 'create' ? 'fields' : 'ops'; history.replaceState(null, '', location.pathname + location.search); toast('Esquema carregat des de l\'enllaç compartit'); return; }
+    catch { toast('Enllaç compartit no vàlid', true); }
+  }
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) { const d = JSON.parse(raw); state = normalize(d.state); ui = Object.assign(ui, d.ui || {}); } } catch {}
+}
+const b64enc = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)));
+
+/* =========================================================================
+   EVENTS
+   ========================================================================= */
+function readValue(el) {
+  if (el.type === 'checkbox') return el.checked;
+  if ('num' in el.dataset) return el.value === '' ? '' : Number(el.value);
+  return el.value;
+}
+
+function onBind(el, isChange) {
+  const path = el.dataset.bind;
+  setPath(path, readValue(el));
+  // side effects
+  if (path === 'settings.autoClass' && !el.checked && !state.settings.className) state.settings.className = autoClassName();
+  if (/\.type$/.test(path)) fixFieldAfterType(path);
+  if (/^update\.ops#\w+\.(field\.name|column)$/.test(path) && isChange) autofillFromKnown(path);
+  if (/^create\.fields#\w+\.name$/.test(path) && isChange) syncFkRename();
+  if (isChange && 'rerender' in el.dataset) scheduleRender(); else refresh();
+}
+
+function fixFieldAfterType(path) {
+  const base = path.replace(/\.type$/, '');
+  const parts = base.split('.'); let obj = state;
+  for (const p of parts) { const m = p.match(/^(\w+)#(\w+)$/); obj = m ? obj[m[1]].find(x => x.id === m[2]) : obj[p]; if (!obj) return; }
+  const t = T(obj);
+  if (!t.uns) obj.unsigned = false;
+  if (!t.ai) obj.ai = false;
+  if (!t.len) obj.length = '';
+  else if (t.len === 'req' && !obj.length) obj.length = t.ph;
+  else if (t.len === 'prec' && !/^\d+\s*,\s*\d+$/.test(obj.length)) obj.length = t.ph;
+  else if (t.len === 'vals' && /^\d+$/.test(obj.length)) obj.length = '';
+  if (t.nodef) obj.def = '';
+}
+
+let lastFieldNames = {};
+function syncFkRename() {
+  // keep FKs pointing to renamed fields
+  const map = {}; state.create.fields.forEach(f => map[f.id] = f.name);
+  state.create.fks.forEach(fk => {
+    const prevId = Object.keys(lastFieldNames).find(id => lastFieldNames[id] === fk.column);
+    if (prevId && map[prevId] && map[prevId] !== fk.column) fk.column = map[prevId];
+  });
+  lastFieldNames = map;
+}
+
+function autofillFromKnown(path) {
+  const id = path.match(/ops#(\w+)/)[1];
+  const op = state.update.ops.find(o => o.id === id); if (!op) return;
+  const known = knownColumns();
+  const name = op.kind === 'dropColumn' ? op.field.name : op.column;
+  const src = known.find(f => f.name === name); if (!src) return;
+  const copy = o => Object.assign(F(''), JSON.parse(JSON.stringify(o)), { id:uid() });
+  if (op.kind === 'dropColumn') {
+    op.field = copy(src);
+    const idx = state.create.fields.indexOf(src); op.after = idx > 0 ? state.create.fields[idx-1].name : '';
+  } else if (op.kind === 'modifyColumn') {
+    op.from = copy(src); op.from.key = 'none';
+    if (!op.to.name || op.to.name === '') { op.to = copy(src); op.to.key = 'none'; }
+  }
+}
+
+function moveIn(arr, id, dir) {
+  const i = arr.findIndex(x => x.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+}
+
+const ACTIONS = {
+  mode: v => { state.mode = v; ui.tab = v === 'create' ? 'fields' : 'ops'; if (v === 'update' && !state.update.table) state.update.table = state.create.table; render(); },
+  tab: v => { ui.tab = v; render(); },
+  out: v => { ui.out = v; refresh(); },
+  'add-field': () => { state.create.fields.push(F(`columna_${state.create.fields.length + 1}`, 'VARCHAR', { length:'255', nullable:true })); render(); focusLast('create.fields', 'name'); },
+  'del-field': (v, el) => { const f = state.create.fields.find(x => x.id === el.dataset.id); state.create.fields = state.create.fields.filter(x => x.id !== el.dataset.id); if (f) state.create.fks = state.create.fks.filter(fk => fk.column !== f.name); delete state.seeder.gens[el.dataset.id]; render(); },
+  'dup-field': (v, el) => { const i = state.create.fields.findIndex(x => x.id === el.dataset.id); if (i < 0) return; const c = Object.assign({}, state.create.fields[i], { id:uid(), name: state.create.fields[i].name + '_copia', key: state.create.fields[i].key === 'primary' ? 'none' : state.create.fields[i].key, ai:false }); state.create.fields.splice(i + 1, 0, c); render(); },
+  'move-field': (v, el) => { moveIn(state.create.fields, el.dataset.id, +el.dataset.dir); render(); },
+  quick: v => {
+    const fs = state.create.fields, has = n => fs.some(f => f.name === n);
+    if (v === 'id') { if (has('id')) return toast('Ja existeix una columna id', true); fs.unshift(idField()); }
+    if (v === 'timestamps') { tsFields().forEach(f => { if (!has(f.name)) fs.push(f); }); }
+    if (v === 'soft') { if (!has('deleted_at')) fs.push(F('deleted_at','DATETIME',{nullable:true})); }
+    if (v === 'fk') {
+      const f = F('user_id','INT',{unsigned:true, key:'index'}); let n = 1; while (has(f.name)) f.name = `user_id_${++n}`;
+      const at = fs.findIndex(x => x.key === 'primary'); fs.splice(at >= 0 ? at + 1 : 0, 0, f);
+      state.create.fks.push({ id:uid(), column:f.name, refTable:'users', refColumn:'id', onUpdate:'CASCADE', onDelete:'CASCADE' });
+      toast('Columna i clau forana afegides (revisa-les a "Claus i índexs")');
+    }
+    render();
+  },
+  'add-fk': () => { const cand = state.create.fields.find(f => /_id$/.test(f.name) && !state.create.fks.some(k => k.column === f.name)); state.create.fks.push({ id:uid(), column: cand ? cand.name : '', refTable: cand ? cand.name.replace(/_id$/, '') + 's' : '', refColumn:'id', onUpdate:'CASCADE', onDelete:'CASCADE' }); render(); },
+  'del-fk': (v, el) => { state.create.fks = state.create.fks.filter(x => x.id !== el.dataset.id); render(); },
+  'add-index': () => { (state.create.indexes ||= []).push({ id:uid(), columns:'', unique:false, name:'' }); render(); },
+  'del-index': (v, el) => { state.create.indexes = state.create.indexes.filter(x => x.id !== el.dataset.id); render(); },
+  'add-op': v => { state.update.ops.push(newOp(v)); render(); const last = document.querySelectorAll('.op'); last[last.length-1]?.scrollIntoView({ behavior:'smooth', block:'center' }); },
+  'del-op': (v, el) => { state.update.ops = state.update.ops.filter(x => x.id !== el.dataset.id); render(); },
+  'move-op': (v, el) => { moveIn(state.update.ops, el.dataset.id, +el.dataset.dir); render(); },
+  'seed-mode': v => { state.seeder.mode = v; if (v === 'static' && state.seeder.count > 500) state.seeder.count = 50; render(); },
+  reroll: () => { state.seeder.jsSeed = Math.floor(Math.random() * 1e9); render(); },
+  'new-ts': () => { state.settings.timestamp = ts(); refresh(); toast('Timestamp actualitzat'); },
+  copy: () => copyText(current.code, 'Codi copiat al porta-retalls'),
+  'copy-text': (v, el) => copyText(el.dataset.text, 'Ordre copiada'),
+  download: () => { download(current.filename, current.code, ui.out === 'json' ? 'application/json' : 'text/x-php'); toast(`Descarregat ${current.filename}`); },
+  'export-json': () => { download(`kpmigrator-${state.mode === 'create' ? state.create.table : state.update.table}.json`, JSON.stringify(state, null, 2), 'application/json'); toast('Esquema exportat'); },
+  share: () => { const url = location.origin + location.pathname + '#s=' + b64enc(JSON.stringify(state)); copyText(url, 'Enllaç copiat: conté tot l\'esquema'); },
+  reset: () => { if (!confirm('Vols reiniciar tot l\'esquema? Es perdran els canvis no exportats.')) return; state = defaultState(); ui.tab = 'fields'; render(); toast('Esquema reiniciat'); },
+  theme: () => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('kpmigrator:theme', root.dataset.theme); } catch {}
+  },
+};
+
+function focusLast(listPath, key) {
+  setTimeout(() => { const els = document.querySelectorAll(`[data-bind^="${listPath}#"][data-bind$=".${key}"]`); const el = els[els.length - 1]; if (el) { el.focus(); el.select(); el.scrollIntoView({ block:'center', behavior:'smooth' }); } }, 10);
+}
+
+function applyTemplate(v) {
+  const [kind, key] = v.split(':');
+  if (kind === 'c') {
+    const t = TEMPLATES[key](); state.mode = 'create';
+    state.create = Object.assign({ ifNotExists:false, ifExists:true, engine:'', comment:'' }, t);
+    state.seeder.gens = {}; ui.tab = 'fields';
+    toast(`Plantilla "${t.table}" carregada`);
+  } else {
+    const t = UPDATE_TEMPLATES[key](); state.mode = 'update'; state.update = t; ui.tab = 'ops';
+    toast('Exemple de modificació carregat');
+  }
+  state.settings.autoClass = true; state.settings.timestamp = ts();
+  lastFieldNames = {}; state.create.fields.forEach(f => lastFieldNames[f.id] = f.name);
+  render();
+}
+
+async function copyText(text, msg) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast(msg);
+}
+function download(name, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type: type + ';charset=utf-8' }));
+  const a = Object.assign(document.createElement('a'), { href:url, download:name }); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+let toastT;
+function toast(msg, err = false) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2600);
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
+  const fn = ACTIONS[el.dataset.action]; if (fn) { e.preventDefault(); fn(el.dataset.v, el); }
+});
+const editorEl = document.getElementById('editor');
+editorEl.addEventListener('input', e => { const el = e.target; if (!el.dataset.bind || el.type === 'checkbox' || el.tagName === 'SELECT') return; onBind(el, false); });
+editorEl.addEventListener('change', e => { const el = e.target; if (!el.dataset.bind) return; onBind(el, true); });
+document.getElementById('tplSelect').addEventListener('change', e => { if (e.target.value) applyTemplate(e.target.value); e.target.value = ''; });
+document.getElementById('importInput').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (d && (d.create || d.update)) { state = normalize(d); }
+      else if (d && Array.isArray(d.fields)) { // legacy format (CI4 Migration & Seeder Studio)
+        state = defaultState();
+        state.create.table = d.tableName || 'taula';
+        state.create.fields = d.fields.map(f => F(f.name, (f.type || 'VARCHAR').toUpperCase(), { length: f.type === 'ENUM' ? splitList(f.constraint).join(', ') : (/^INT|BIGINT|SMALLINT|TINYINT|MEDIUMINT$/.test(f.type) ? '' : (f.constraint || '')), unsigned: !!f.unsigned, nullable: !!f.nullable, ai: !!f.autoIncrement, def: f.defaultValue || '', key: f.keyType || 'none' }));
+        state.create.fks = (d.foreignKeys || []).map(k => ({ id:uid(), column:k.field, refTable:k.foreignTable, refColumn:k.foreignField || 'id', onUpdate:k.onUpdate || 'CASCADE', onDelete:k.onDelete || 'CASCADE' }));
+        state.create.ifNotExists = !!d.ifNotExists; state.create.ifExists = d.ifExists !== false;
+        if (d.migrationNamespace) state.settings.migrationNs = d.migrationNamespace;
+        if (d.seederNamespace) state.settings.seederNs = d.seederNamespace;
+        if (d.seederCount) state.seeder.count = d.seederCount;
+      } else throw new Error('format');
+      ui.tab = state.mode === 'create' ? 'fields' : 'ops';
+      render(); toast('Esquema importat');
+    } catch { toast('El fitxer JSON no és vàlid', true); }
+    e.target.value = '';
+  };
+  r.readAsText(file);
+});
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+try { const th = localStorage.getItem('kpmigrator:theme'); if (th) document.documentElement.dataset.theme = th; } catch {}
+loadInitial();
+state.create.fields.forEach(f => lastFieldNames[f.id] = f.name);
+render();
+</script>
+</body>
+</html>
